@@ -92,6 +92,48 @@ def get_app_version(card_id):
                     version = fragment[9:]
     return app_name, version
 
+def migrate_packages(trello_connection, source_cards,
+                             dest_list_id, dest_catalog_name):
+
+    run_makecatalogs = 0
+  
+    # create a list of pkgsinfo files
+    pkgsinfo_dirwalk = os.walk(os.path.join(MUNKI_PATH,'pkgsinfo'),
+                                                            topdown=False)
+
+    # Find items from the source list, update pkginfo, and change trello
+    # card to dest
+    for card in source_cards:
+        app_name, version = get_app_version(card[id])
+        
+        plist = None
+        for root, dirs, files in pkgsinfo_dirwalk:
+           # It is conceivable there are broken / non plist files
+           # so we try to parse the files, just in case
+           pkgsinfo = os.path.join(root, name)
+           try:
+               plist = plistlib.readPlist(pkgsinfo) 
+           except:
+              plist = None # Just in case
+              continue 
+
+           if plist['name'] == app_name \
+               and plist['version'] == version:
+
+               plist['catalogs'] = [dest_catalog_name]
+
+               plistlib.writePlist(plist, pkgsinfo)
+
+               trello_connection.cards.update_idList(card['id'], dest_list_id)
+               run_makecatalogs = run_makecatalogs + 1
+               break
+        if plist != None:
+           break 
+
+    return run_makecatalogs
+
+
+
 
 usage = "%prog [options]"
 o = optparse.OptionParser(usage=usage)
@@ -241,79 +283,18 @@ if len(to_production):
         new_list = trello.boards.new_list(BOARD_ID, list_title)
         update_pos(new_list['id'], position)
 
-run_makecatalogs = False
+run_makecatalogs = 0 
 # Find the items that are in To Production and change the pkginfo
-for card in to_production:
-    app_name, version = get_app_version(card['id'])
-    done = False
-    for root, dirs, files in os.walk(os.path.join(MUNKI_PATH,'pkgsinfo'), topdown=False):
-        for name in files:
-            # Try, because it's conceivable there's a broken / non plist
-            plist = None
-            try:
-                plist = plistlib.readPlist(os.path.join(root, name))
-            except:
-                pass
-            
-            if plist and plist['name'] == app_name and plist['version'] == version:
-                plist['catalogs'] = [PROD_CATALOG]
-
-                plistlib.writePlist(plist, os.path.join(root, name))
-                trello.cards.update_idList(card['id'], new_list['id'])
-                run_makecatalogs = True
-                done = True
-                break
-        if done:
-            break
+rc = migrate_packages(trello, to_production, new_list['id'], PROD_CATALOG)
+run_makecatalogs = run_makecatalogs + rc
 
 # Move cards in to_testing to testing. Update the pkginfo
-for card in to_testing:
-    print card
-    app_name, version = get_app_version(card['id'])
-    done = False
-    for root, dirs, files in os.walk(os.path.join(MUNKI_PATH,'pkgsinfo'), topdown=False):
-        for name in files:
-            # Try, because it's conceivable there's a broken / non plist
-            plist = None
-            try:
-                plist = plistlib.readPlist(os.path.join(root, name))
-            except Exception as e:
-                print "Problem reading %s. Error: %s" % (os.path.join(root, name), e)
-            
-            if plist and plist['name'] == app_name and plist['version'] == version:
-                plist['catalogs'] = [TEST_CATALOG]
-
-                plistlib.writePlist(plist, os.path.join(root, name))
-                trello.cards.update_idList(card['id'], test_id)
-                run_makecatalogs = True
-                done = True
-                break
-        if done:
-            break
+rc = migrate_packages(trello, to_testing, test_id, TEST_CATALOG)
+run_makecatalogs = run_makecatalogs + rc
 
 # Move cards in to_development to development. Update the pkginfo
-for card in to_development:
-    app_name, version = get_app_version(card['id'])
-    done = False
-    for root, dirs, files in os.walk(os.path.join(MUNKI_PATH,'pkgsinfo'), topdown=False):
-        for name in files:
-            # Try, because it's conceivable there's a broken / non plist
-            plist = None
-            try:
-                plist = plistlib.readPlist(os.path.join(root, name))
-            except:
-                pass
-            
-            if plist and plist['name'] == app_name and plist['version'] == version:
-                plist['catalogs'] = [DEV_CATALOG]
-
-                plistlib.writePlist(plist, os.path.join(root, name))
-                trello.cards.update_idList(card['id'], dev_id)
-                run_makecatalogs = True
-                done = True
-                break
-        if done:
-            break
+rc = migrate_packages(trello, to_development, dev_id, DEV_CATALOG)
+run_makecatalogs = run_makecatalogs + rc
 
 # Have a look at development and find any items that aren't in the all catalog anymore
 for card in development:
