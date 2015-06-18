@@ -104,36 +104,34 @@ def migrate_packages(trello_connection, source_cards,
     # Find items from the source list, update pkginfo, and change trello
     # card to dest
     for card in source_cards:
-        app_name, version = get_app_version(card[id])
+        app_name, version = get_app_version(card['id'])
         
         plist = None
         for root, dirs, files in pkgsinfo_dirwalk:
-           # It is conceivable there are broken / non plist files
-           # so we try to parse the files, just in case
-           pkgsinfo = os.path.join(root, name)
-           try:
-               plist = plistlib.readPlist(pkgsinfo) 
-           except:
-              plist = None # Just in case
-              continue 
+           for file in files:
+               # It is conceivable there are broken / non plist files
+               # so we try to parse the files, just in case
+               pkgsinfo = os.path.join(root, file)
+               try:
+                   plist = plistlib.readPlist(pkgsinfo)
+               except:
+                   plist = None # Just in case
+                   continue 
 
-           if plist['name'] == app_name \
-               and plist['version'] == version:
+               if plist['name'] == app_name \
+                   and plist['version'] == version:
 
-               plist['catalogs'] = [dest_catalog_name]
+                   plist['catalogs'] = [dest_catalog_name]
 
-               plistlib.writePlist(plist, pkgsinfo)
+                   plistlib.writePlist(plist, pkgsinfo)
 
-               trello_connection.cards.update_idList(card['id'], dest_list_id)
-               run_makecatalogs = run_makecatalogs + 1
-               break
-        if plist != None:
-           break 
+                   trello_connection.cards.update_idList(card['id'], dest_list_id)
+                   run_makecatalogs = run_makecatalogs + 1
+                   break
+           if plist != None:
+              break
 
     return run_makecatalogs
-
-
-
 
 usage = "%prog [options]"
 o = optparse.OptionParser(usage=usage)
@@ -285,16 +283,19 @@ if len(to_production):
 
 run_makecatalogs = 0 
 # Find the items that are in To Production and change the pkginfo
-rc = migrate_packages(trello, to_production, new_list['id'], PROD_CATALOG)
-run_makecatalogs = run_makecatalogs + rc
+if len(to_production):
+    rc = migrate_packages(trello, to_production, new_list['id'], PROD_CATALOG)
+    run_makecatalogs = run_makecatalogs + rc
 
 # Move cards in to_testing to testing. Update the pkginfo
-rc = migrate_packages(trello, to_testing, test_id, TEST_CATALOG)
-run_makecatalogs = run_makecatalogs + rc
+if len(to_testing):
+    rc = migrate_packages(trello, to_testing, test_id, TEST_CATALOG)
+    run_makecatalogs = run_makecatalogs + rc
 
 # Move cards in to_development to development. Update the pkginfo
-rc = migrate_packages(trello, to_development, dev_id, DEV_CATALOG)
-run_makecatalogs = run_makecatalogs + rc
+if len(to_development):
+    rc = migrate_packages(trello, to_development, dev_id, DEV_CATALOG)
+    run_makecatalogs = run_makecatalogs + rc
 
 # Have a look at development and find any items that aren't in the all catalog anymore
 for card in development:
