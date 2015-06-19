@@ -21,10 +21,17 @@ DEVLIST='Unstable'
 TESTLIST='Testing'
 PRODLIST='Stable'
 
+DEVCAT='unstable'
+TESTCAT='testing'
+PRODCAT='stable'
+
 python ${MTRELLO} --boardid ${BOARDID}  --key ${KEY} --token=${TOKEN} \
+    --dev-cat="${DEVCAT}"  \
     --dev-list="${DEVLIST}"  \
     --to-dev-list="To ${DEVLIST}" \
+    --test-cat="${TESTCAT}"  \
     --test-list="${TESTLIST}"  \
     --to-test-list="To ${TESTLIST}" \
+    --prod-cat="${PRODCAT}"  \
     --to-prod-list="To ${PRODLIST}" \
     --repo-path=${MUNKI_REPO} \
