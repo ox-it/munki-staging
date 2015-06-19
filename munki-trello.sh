@@ -17,5 +17,14 @@ MTRELLO=/srv/autopkg/munki-trello/munki-trello/munki-trello.py
 # Because I don't like unpackaged installs 
 export PYTHONPATH=/srv/autopkg/munki-trello
 
-python ${MTRELLO} --boardid ${BOARDID} --key ${KEY} --token=${TOKEN} \
+DEVLIST='Unstable'
+TESTLIST='Testing'
+PRODLIST='Stable'
+
+python ${MTRELLO} --boardid ${BOARDID}  --key ${KEY} --token=${TOKEN} \
+    --dev-list="${DEVLIST}"  \
+    --to-dev-list="To ${DEVLIST}" \
+    --test-list="${TESTLIST}"  \
+    --to-test-list="To ${TESTLIST}" \
+    --to-prod-list="To ${PRODLIST}" \
     --repo-path=${MUNKI_REPO} \
