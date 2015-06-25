@@ -131,7 +131,6 @@ def migrate_packages(trello_connection, source_cards,
 
                    plistlib.writePlist(plist, pkgsinfo)
 
-                   print 'UPDATING'
                    trello_connection.cards.update_idList(card['id'], dest_list_id)
                    run_makecatalogs = run_makecatalogs + 1
                    break
