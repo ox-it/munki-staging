@@ -32,7 +32,7 @@ $ sudo easy_install trello
 
 ## Running the script
 
-You have two options - you can run the script manually on a machine with the Munki Tools installed (this will run on OS X or Linux, Windows isn't tested), or you can use the [Docker container](https://github.com/pebbleit/docker-munki-trello). For more details about the Docker container, see it's [own repository](https://github.com/pebbleit/docker-munki-trello) and it's entry on the [Docker Hub](https://registry.hub.docker.com/u/pebbleit/munki-trello/).
+You have two options - you can run the script manually on a machine with the Munki Tools installed (this will run on OS X or Linux, Windows isn't tested), or you can use the [Docker container](https://github.com/grahamgilbert/docker-munki-trello). For more details about the Docker container, see it's [own repository](https://github.com/grahamgilbert/docker-munki-trello) and it's entry on the [Docker Hub](https://registry.hub.docker.com/u/grahamgilbert/munki-trello/).
 
 ### Example
 
@@ -45,6 +45,7 @@ $ python munki-trello.py --boardid 12345 --key myverylongkey --token myevenlonge
 * ``--boardid``: Required. The ID of your Trello board.
 * ``--key``: Required. Your Trello API key.
 * ``--token``: Required. Your Trello User Token.
+* ``--config``: Optional. A file to read configuation settings from. 
 * ``--to-dev-list``: Optional. The name of your 'To Development' list. Defaults to ``To Development``.
 * ``--dev-list``: Optional. The name of your 'Development' list. Defaults to ``Development``.
 * ``--to-test-list``: Optional. The name of your 'To Testing' list. Defaults to ``To Testing``.
@@ -53,6 +54,22 @@ $ python munki-trello.py --boardid 12345 --key myverylongkey --token myevenlonge
 * ``--suffix``: The suffix that will be put after the dated 'Production' lists. Defaults to ``Production``.
 * ``--repo-path``: The path to your Munki repository. Defaults to ``/Volumes/Munki``.
 * ``--makecatalogs``: The path to ``makecatalogs``. Defaults to ``/usr/local/munki/makecatalogs``.
+
+## Configuration file
+
+You can give all of the comamand line options in a configuration file,
+which will be read first. The default configuration file
+locations are:
+    /etc/munki-trello/munki-trello.cfg
+    ./munki-trello.cfg
+and these will always be checked. You can also add an extra config
+file location by using the --config command line option.
+
+N.B. Configuration files will be processed *before* command line options.
+
+Options on the command line will be used in preference to those in the
+configuration file. An example configuration file is in
+munki-trello.cfg-template.
 
 # Troubleshooting
 
