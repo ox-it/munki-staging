@@ -9,6 +9,13 @@ import requests
 import json
 import optparse
 
+from ConfigParser import SafeConfigParser
+
+# Default settings (overridden by config file and command line options)
+DEFAULT_CONFIG_FILE_LOCATIONS= [
+    '/etc/munki-trello/munki-trello.cfg',
+    'munki-trello.cfg'
+]
 DEFAULT_DEV_LIST = "Development"
 DEFAULT_TEST_LIST = "Testing"
 DEFAULT_TO_DEV_LIST = "To Development"
@@ -20,7 +27,6 @@ DEFAULT_MAKECATALOGS = "/usr/local/munki/makecatalogs"
 DEFAULT_MUNKI_DEV_CATALOG = "development"
 DEFAULT_MUNKI_TEST_CATALOG = "testing"
 DEFAULT_MUNKI_PROD_CATALOG = "production"
-
 
 def fail(message):
     sys.stderr.write(message)
@@ -125,6 +131,7 @@ def migrate_packages(trello_connection, source_cards,
 
                    plistlib.writePlist(plist, pkgsinfo)
 
+                   print 'UPDATING'
                    trello_connection.cards.update_idList(card['id'], dest_list_id)
                    run_makecatalogs = run_makecatalogs + 1
                    break
@@ -132,6 +139,84 @@ def migrate_packages(trello_connection, source_cards,
               break
 
     return run_makecatalogs
+
+def read_config(cmdopts):
+
+    config = SafeConfigParser(allow_no_value=True)
+
+    # Setr up defaults 
+    config.add_section('main')
+    config.set('main', 'boardid', None)
+    config.set('main', 'key', None)
+    config.set('main', 'token', None)
+    config.set('main', 'makecatalogs', DEFAULT_MAKECATALOGS)
+    config.set('main', 'repo_path', DEFAULT_MUNKI_PATH)
+
+    config.add_section('development')
+    config.set('development', 'list', DEFAULT_DEV_LIST)
+    config.set('development', 'catalog', DEFAULT_MUNKI_DEV_CATALOG)
+    config.set('development', 'to_list', DEFAULT_TO_DEV_LIST)
+
+    config.add_section('testing')
+    config.set('testing', 'list', DEFAULT_TEST_LIST)
+    config.set('testing', 'catalog', DEFAULT_MUNKI_TEST_CATALOG)
+    config.set('testing', 'to_list', DEFAULT_TO_PROD_LIST)
+
+    config.add_section('production')
+    config.set('production', 'catalog', DEFAULT_MUNKI_PROD_CATALOG)
+    config.set('production', 'to_list', DEFAULT_TO_PROD_LIST)
+    config.set('production', 'suffix', DEFAULT_PRODUCTION_SUFFIX)
+
+    config_file_locations = DEFAULT_CONFIG_FILE_LOCATIONS
+
+    if cmdopts.config:
+        config_file_locations.append(cmdopts.config)
+   
+    rc = config.read(config_file_locations)
+    print rc
+    #print config_file_locations
+
+    if not cmdopts.boardid:
+        cmdopts.boardid = config.get('main', 'boardid')
+
+    if not cmdopts.key:
+        cmdopts.key = config.get('main', 'key')
+
+    if not cmdopts.token:
+        cmdopts.token = config.get('main', 'token')
+
+    if not cmdopts.repo_path:
+        cmdopts.repo_path = config.get('main', 'repo_path')
+
+    if not cmdopts.makecatalogs:
+        cmdopts.makecatalogs = config.get('main', 'makecatalogs')
+
+    if not cmdopts.to_dev_list:
+        cmdopts.to_dev_list = config.get('development', 'to_list')
+
+    if not cmdopts.dev_list:
+        cmdopts.dev_list = config.get('development', 'list')
+
+    if not cmdopts.dev_catalog:
+        cmdopts.dev_catalog = config.get('development', 'catalog')
+
+    if not cmdopts.to_test_list:
+        cmdopts.to_test_list = config.get('testing', 'to_list')
+
+    if not cmdopts.test_list:
+        cmdopts.test_list = config.get('testing', 'list')
+
+    if not cmdopts.test_catalog:
+        cmdopts.test_catalog = config.get('testing', 'catalog')
+
+    if not cmdopts.to_prod_list:
+        cmdopts.to_prod_list = config.get('production', 'to_list')
+
+    if not cmdopts.prod_catalog:
+        cmdopts.prod_catalog = config.get('production', 'catalog')
+
+    if not cmdopts.suffix:
+        cmdopts.suffix = config.get('production', 'suffix')
 
 usage = "%prog [options]"
 o = optparse.OptionParser(usage=usage)
@@ -146,51 +231,60 @@ o.add_option("--token", help=("Trello application token. See README for details 
 
 # Optional Options
 
-o.add_option("--to-dev-list", default=DEFAULT_TO_DEV_LIST,
+o.add_option("--config",
+    help=("Name of configuration file; program will try to read '/etc/munki-trello/munki-trello.cfg' and './munki-trello.cfg' by default, appending this configuration file to the end of the list; configuration file values will be overridden by those on the command line and last match wins") )
+
+
+o.add_option("--to-dev-list",
     help=("Name of the 'To Development' Trello list. Defaults to '%s'. "
               % DEFAULT_DEV_LIST))
 
-o.add_option("--dev-list", default=DEFAULT_DEV_LIST,
+o.add_option("--dev-list",
     help=("Name of the 'Development' Trello list. Defaults to '%s'. "
               % DEFAULT_DEV_LIST))
 
-o.add_option("--to-test-list", default=DEFAULT_TO_TEST_LIST,
+o.add_option("--to-test-list",
     help=("Name of the 'To Testing' Trello list. Defaults to '%s'. "
               % DEFAULT_TO_TEST_LIST))
 
-o.add_option("--test-list", default=DEFAULT_TEST_LIST,
+o.add_option("--test-list",
     help=("Name of the 'Testing' Trello list. Defaults to '%s'. "
               % DEFAULT_TEST_LIST))
 
-o.add_option("--to-prod-list", default=DEFAULT_TO_PROD_LIST,
+o.add_option("--to-prod-list",
     help=("Name of the 'To Production' Trello list. Defaults to '%s'. "
               % DEFAULT_TO_PROD_LIST))
 
-o.add_option("--suffix", default=DEFAULT_PRODUCTION_SUFFIX,
+o.add_option("--suffix",
     help=("Suffix that will be added to new 'In Production cards'. Defaults to '%s'. "
               % DEFAULT_PRODUCTION_SUFFIX))
 
-o.add_option("--dev-catalog", default=DEFAULT_MUNKI_DEV_CATALOG,
+o.add_option("--dev-catalog",
     help=("Name of the Munki development catalog. Defaults to '%s'. "
               % DEFAULT_MUNKI_DEV_CATALOG))
 
-o.add_option("--test-catalog", default=DEFAULT_MUNKI_TEST_CATALOG,
+o.add_option("--test-catalog",
     help=("Name of the Munki testing catalog. Defaults to '%s'. "
               % DEFAULT_MUNKI_TEST_CATALOG))
 
-o.add_option("--prod-catalog", default=DEFAULT_MUNKI_PROD_CATALOG,
+o.add_option("--prod-catalog",
     help=("Name of the Munki production catalog. Defaults to '%s'. "
               % DEFAULT_MUNKI_PROD_CATALOG))
 
-o.add_option("--repo-path", default=DEFAULT_MUNKI_PATH,
+o.add_option("--repo-path",
     help=("Path to your Munki repository. Defaults to '%s'. "
               % DEFAULT_MUNKI_PATH))
 
-o.add_option("--makecatalogs", default=DEFAULT_MAKECATALOGS,
+o.add_option("--makecatalogs",
     help=("Path to makecatalogs. Defaults to '%s'. "
               % DEFAULT_MAKECATALOGS))
 
 opts, args = o.parse_args()
+
+# Read configuration file (either given on command line or
+# from default locactions
+
+read_config(opts)
 
 if not opts.boardid or not opts.key or not opts.token:
     fail("Board ID, API key and application token are required.")
