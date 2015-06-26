@@ -207,7 +207,9 @@ def read_config(cmdopts):
     if not cmdopts.prod_catalog:
         cmdopts.prod_catalog = config.get('production', 'catalog')
 
-    if not cmdopts.prod_suffix:
+    # We check for None here, as the only way to override this
+    # on the command line is to set --suffix= 
+    if cmdopts.prod_suffix == None:
         cmdopts.prod_suffix = config.get('production', 'suffix')
 
 def find_or_create_list(trello, board_id, name_id_dict, required_name, position):
