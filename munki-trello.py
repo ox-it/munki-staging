@@ -9,7 +9,7 @@ import requests
 import json
 import optparse
 
-from ConfigParser import SafeConfigParser
+from ConfigParser import RawConfigParser
 
 # Default settings (overridden by config file and command line options)
 DEFAULT_CONFIG_FILE_LOCATIONS= [
@@ -18,6 +18,7 @@ DEFAULT_CONFIG_FILE_LOCATIONS= [
 ]
 DEFAULT_DEV_LIST = "Development"
 DEFAULT_TEST_LIST = "Testing"
+DEFAULT_PROD_LIST = "Production"
 DEFAULT_TO_DEV_LIST = "To Development"
 DEFAULT_TO_TEST_LIST = "To Testing"
 DEFAULT_TO_PROD_LIST = "To Production"
@@ -27,6 +28,7 @@ DEFAULT_MAKECATALOGS = "/usr/local/munki/makecatalogs"
 DEFAULT_MUNKI_DEV_CATALOG = "development"
 DEFAULT_MUNKI_TEST_CATALOG = "testing"
 DEFAULT_MUNKI_PROD_CATALOG = "production"
+DEFAULT_DATE_FORMAT = '%d/%m/%y'
 
 def fail(message):
     sys.stderr.write(message)
@@ -66,21 +68,6 @@ def name_in_list(name, to_development, development, testing, to_testing, to_prod
             return True
 
     return False
-
-def get_next_position(lists, to_dev_id, dev_id, to_test_id, test_id, to_prod_id):
-    # exclude the five 'system' lists and the one we just made
-    max_id = 0
-    for list in lists:
-        if list['id'] == dev_id or list['id'] == to_dev_id or list['id'] == test_id or list['id'] == to_prod_id or list['id'] == to_test_id:
-            continue
-        if list['pos'] > max_id:
-            max_id = list['pos']
-
-    # we should now have the highest position
-    if max_id == 0:
-        return 1000000
-    else:
-        return max_id - 1
 
 def get_app_version(card_id):
     cards = trello.cards.get_action(card_id)
@@ -141,7 +128,7 @@ def migrate_packages(trello_connection, source_cards,
 
 def read_config(cmdopts):
 
-    config = SafeConfigParser(allow_no_value=True)
+    config = RawConfigParser(allow_no_value=True)
 
     # Setr up defaults 
     config.add_section('main')
@@ -150,6 +137,7 @@ def read_config(cmdopts):
     config.set('main', 'token', None)
     config.set('main', 'makecatalogs', DEFAULT_MAKECATALOGS)
     config.set('main', 'repo_path', DEFAULT_MUNKI_PATH)
+    config.set('main', 'date_format', DEFAULT_DATE_FORMAT)
 
     config.add_section('development')
     config.set('development', 'list', DEFAULT_DEV_LIST)
@@ -162,6 +150,7 @@ def read_config(cmdopts):
     config.set('testing', 'to_list', DEFAULT_TO_PROD_LIST)
 
     config.add_section('production')
+    config.set('production', 'list', DEFAULT_PROD_LIST)
     config.set('production', 'catalog', DEFAULT_MUNKI_PROD_CATALOG)
     config.set('production', 'to_list', DEFAULT_TO_PROD_LIST)
     config.set('production', 'suffix', DEFAULT_PRODUCTION_SUFFIX)
@@ -172,8 +161,6 @@ def read_config(cmdopts):
         config_file_locations.append(cmdopts.config)
    
     rc = config.read(config_file_locations)
-    print rc
-    #print config_file_locations
 
     if not cmdopts.boardid:
         cmdopts.boardid = config.get('main', 'boardid')
@@ -189,6 +176,9 @@ def read_config(cmdopts):
 
     if not cmdopts.makecatalogs:
         cmdopts.makecatalogs = config.get('main', 'makecatalogs')
+
+    if not cmdopts.date_format:
+        cmdopts.date_format = config.get('main', 'date_format')
 
     if not cmdopts.to_dev_list:
         cmdopts.to_dev_list = config.get('development', 'to_list')
@@ -208,14 +198,32 @@ def read_config(cmdopts):
     if not cmdopts.test_catalog:
         cmdopts.test_catalog = config.get('testing', 'catalog')
 
+    if not cmdopts.prod_list:
+        cmdopts.prod_list = config.get('production', 'list')
+
     if not cmdopts.to_prod_list:
         cmdopts.to_prod_list = config.get('production', 'to_list')
 
     if not cmdopts.prod_catalog:
         cmdopts.prod_catalog = config.get('production', 'catalog')
 
-    if not cmdopts.suffix:
-        cmdopts.suffix = config.get('production', 'suffix')
+    # We check for None here, as the only way to override this
+    # on the command line is to set --suffix= 
+    if cmdopts.prod_suffix == None:
+        cmdopts.prod_suffix = config.get('production', 'suffix')
+
+def find_or_create_list(trello, board_id, name_id_dict, required_name, position):
+
+    if name_id_dict.has_key(required_name):
+        return name_id_dict[required_name]
+
+    new_list = trello.boards.new_list(board_id, required_name)
+
+    if position == 0:
+        position = 1000001
+    update_pos(new_list['id'], position-1)
+
+    return new_list['id']
 
 usage = "%prog [options]"
 o = optparse.OptionParser(usage=usage)
@@ -250,11 +258,15 @@ o.add_option("--test-list",
     help=("Name of the 'Testing' Trello list. Defaults to '%s'. "
               % DEFAULT_TEST_LIST))
 
+o.add_option("--prod-list",
+    help=("Name of the 'Production' Trello list. Defaults to '%s'. Will only be used if the production suffix is set to the empty string"
+              % DEFAULT_PROD_LIST))
+
 o.add_option("--to-prod-list",
     help=("Name of the 'To Production' Trello list. Defaults to '%s'. "
               % DEFAULT_TO_PROD_LIST))
 
-o.add_option("--suffix",
+o.add_option("--prod-suffix","--suffix",
     help=("Suffix that will be added to new 'In Production cards'. Defaults to '%s'. "
               % DEFAULT_PRODUCTION_SUFFIX))
 
@@ -278,6 +290,11 @@ o.add_option("--makecatalogs",
     help=("Path to makecatalogs. Defaults to '%s'. "
               % DEFAULT_MAKECATALOGS))
 
+o.add_option("--date-format",
+    help=("Date format to use when creating dated lists. See strftime(1) for details of formatting options. Defaults to '%s'. "
+              % DEFAULT_DATE_FORMAT))
+
+
 opts, args = o.parse_args()
 
 # Read configuration file (either given on command line or
@@ -296,12 +313,14 @@ DEV_LIST = opts.dev_list
 TO_TEST_LIST = opts.to_test_list
 TEST_LIST = opts.test_list
 TO_PROD_LIST = opts.to_prod_list
+PROD_LIST = opts.prod_list
 DEV_CATALOG = opts.dev_catalog
 TEST_CATALOG = opts.test_catalog
 PROD_CATALOG = opts.prod_catalog
-PRODUCTION_SUFFIX = opts.suffix
+PRODUCTION_SUFFIX = opts.prod_suffix
 MUNKI_PATH = opts.repo_path
 MAKECATALOGS = opts.makecatalogs
+DATE_FORMAT=opts.date_format
 
 if not os.path.exists(MUNKI_PATH):
     fail('Munki path not accessible')
@@ -311,31 +330,71 @@ trello.set_token(TOKEN)
 
 lists = trello.boards.get_list(BOARD_ID)
 
+# Build up list of names and list ids for quick reference
+list_names = {}
+list_positions = {}
 for list in lists:
+    list_names[ list['name'] ] = list['id']
+    list_positions[   list['name'] ] = list['pos']
 
-    if list['name'] == TO_DEV_LIST:
-        to_dev_id = list['id']
+# Check that the lists we require exist
+for name in [TO_DEV_LIST, TO_TEST_LIST, TO_PROD_LIST, DEV_LIST, TEST_LIST]:
+    if not list_names.has_key(name):
+        fail("No '%s' list found\n" % name)
 
-    if list['name'] == DEV_LIST:
-        dev_id = list['id']
+# get the 'To' lists, removing these items from the dictionary
+# (so that when we find max_id below, we will ignore these entries)
+# Note that we *should* not get a key error due to the checks above
+id = list_names[TO_DEV_LIST]
+list_positions.pop(TO_DEV_LIST)
+to_development = trello.lists.get_card(id)
 
-    if list['name'] == TEST_LIST:
-        test_id = list['id']
+id = list_names[TO_TEST_LIST]
+list_positions.pop(TO_TEST_LIST)
+to_testing     = trello.lists.get_card(id)
 
-    if list['name'] == TO_TEST_LIST:
-        to_test_id = list['id']
+id = list_names[TO_PROD_LIST]
+list_positions.pop(TO_PROD_LIST)
+to_production  = trello.lists.get_card(id)
 
-    if list['name'] == TO_PROD_LIST:
-        to_prod_id = list['id']
-        
+dev_id      = list_names[DEV_LIST]
+list_positions.pop(DEV_LIST)
+development = trello.lists.get_card(dev_id)
+
+test_id     = list_names[TEST_LIST]
+list_positions.pop(TEST_LIST)
+testing     = trello.lists.get_card(test_id)
+
+# For production we either use date + suffix or the production list.
+# However, we only need check these lists if there are things to move
+# into production:
+prod_title = None
+list_prefix = date.today().strftime(DATE_FORMAT)
+
+if len(to_production):
+
+    if PRODUCTION_SUFFIX:
+        prod_title = '%s %s' % (list_prefix, PRODUCTION_SUFFIX)
+  
+        # Find the maximun list id from the remaining list_names:
+        positions = list_positions.values()
+        positions.sort()
+        max_position = positions[-1]
+
+        prod_id = find_or_create_list(trello, BOARD_ID,
+                                    list_names, prod_title, max_position)
+    else:
+        prod_title = PROD_LIST
+        if not list_names.has_key(prod_title):
+            fail("No '%s' list found\n" % prod_title)
+
+        prod_id = list_names[prod_title]
+
+# This check may be superflous, but it helped find a bug in development
+if len(to_production) and not prod_id:
+   fail('No id found (or created) for %s\n' % prod_title)
 
 all_catalog = plistlib.readPlist(os.path.join(MUNKI_PATH, 'catalogs/all'))
-
-to_development = trello.lists.get_card(to_dev_id)
-development = trello.lists.get_card(dev_id)
-testing = trello.lists.get_card(test_id)
-to_testing = trello.lists.get_card(to_test_id)
-to_production = trello.lists.get_card(to_prod_id)
 
 missing = []
 for item in all_catalog:
@@ -358,26 +417,11 @@ for item in missing:
             trello.cards.new_action_comment(card['id'], comment)
 
 
-moved_to_prod = []
-if len(to_production):
-    list_title = date.today().strftime("%d/%m/%y")
-    list_title = str(list_title) + " " + PRODUCTION_SUFFIX
-    found = False
-    for list in lists:
-        if list['name'] == list_title:
-            found = True
-            new_list = list
-            break
-
-    if found == False:
-        position = get_next_position(lists, to_dev_id, dev_id, to_test_id, test_id, to_prod_id)
-        new_list = trello.boards.new_list(BOARD_ID, list_title)
-        update_pos(new_list['id'], position)
-
 run_makecatalogs = 0 
 # Find the items that are in To Production and change the pkginfo
+moved_to_prod = []
 if len(to_production):
-    rc = migrate_packages(trello, to_production, new_list['id'], PROD_CATALOG)
+    rc = migrate_packages(trello, to_production, prod_id, PROD_CATALOG)
     run_makecatalogs = run_makecatalogs + rc
 
 # Move cards in to_testing to testing. Update the pkginfo

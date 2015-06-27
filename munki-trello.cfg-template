@@ -34,7 +34,11 @@
 # makecatalogs=/usr/local/munki/makecatalogs
 # The path to the Munki repository being used
 # Defaults to ``Volumes/Munki``
-repo_path=/Volumes/Munki
+# repo_path=/Volumes/Munki
+# The date format to use when creating dated lists.
+# See strftime(1) for details of formatting options.
+# Defaults to ``%d/%m/%y``
+# date_format=%d/%m/%y
 
 # Settings for the development catalog and list
 [development]
@@ -68,7 +72,12 @@ repo_path=/Volumes/Munki
 # The name of the 'To Production' list in trello
 # Defaults to 'To Production'
 #to_list='To Production'
-# The suffix to add to the dated boards that are created
-# as packages are moved into the production catalog
+# The suffix to add to boards that are created
+# as packages are moved into the dated production catalog.
 # Defaults to 'Production'
+# If unset ('suffix=') we will add to the trello list name (see option below)
 #suffix=Production
+# The name of the trello list for Production
+# Defaults to Production
+# N.B. will only be used if 'suffix' is unset
+#list=Production
