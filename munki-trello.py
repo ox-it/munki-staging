@@ -34,7 +34,7 @@ def fail(message):
     sys.stderr.write(message)
     sys.exit(1)
 
-def execute(command):    
+def execute(command):
     popen = subprocess.Popen(command, stdout=subprocess.PIPE)
     lines_iterator = iter(popen.stdout.readline, b"")
     for line in lines_iterator:
@@ -89,12 +89,12 @@ def migrate_packages(trello_connection, source_cards,
                              dest_list_id, dest_catalog_name):
 
     run_makecatalogs = 0
-  
+
     # Find items from the source list, update pkginfo, and change trello
     # card to dest
     for card in source_cards:
         app_name, version = get_app_version(card['id'])
-        
+
         plist = None
         # create a list of pkgsinfo files
         pkgsinfo_dirwalk = os.walk(os.path.join(MUNKI_PATH,'pkgsinfo'),
@@ -109,10 +109,9 @@ def migrate_packages(trello_connection, source_cards,
                    plist = plistlib.readPlist(pkgsinfo)
                except:
                    plist = None # Just in case
-                   continue 
+                   continue
 
-               if plist['name'] == app_name \
-                   and plist['version'] == version:
+               if plist['name'] == app_name and plist['version'] == version:
 
                    plist['catalogs'] = [dest_catalog_name]
 
@@ -133,7 +132,7 @@ def read_config(cmdopts):
 
     config = RawConfigParser(allow_no_value=True)
 
-    # Setr up defaults 
+    # Set up defaults
     config.add_section('main')
     config.set('main', 'boardid', None)
     config.set('main', 'key', None)
@@ -162,7 +161,7 @@ def read_config(cmdopts):
 
     if cmdopts.config:
         config_file_locations.append(cmdopts.config)
-   
+
     rc = config.read(config_file_locations)
 
     if not cmdopts.boardid:
@@ -211,7 +210,7 @@ def read_config(cmdopts):
         cmdopts.prod_catalog = config.get('production', 'catalog')
 
     # We check for None here, as the only way to override this
-    # on the command line is to set --suffix= 
+    # on the command line is to set --suffix=
     if cmdopts.prod_suffix == None:
         cmdopts.prod_suffix = config.get('production', 'suffix')
 
@@ -378,11 +377,14 @@ if len(to_production):
 
     if PRODUCTION_SUFFIX:
         prod_title = '%s %s' % (list_prefix, PRODUCTION_SUFFIX)
-  
+
         # Find the maximun list id from the remaining list_names:
         positions = list_positions.values()
         positions.sort()
-        max_position = positions[-1]
+        if len(positions):
+            max_position = positions[-1]
+        else:
+            max_position = 1000001
 
         prod_id = find_or_create_list(trello, BOARD_ID,
                                     list_names, prod_title, max_position)
@@ -420,7 +422,7 @@ for item in missing:
             trello.cards.new_action_comment(card['id'], comment)
 
 
-run_makecatalogs = 0 
+run_makecatalogs = 0
 # Find the items that are in To Production and change the pkginfo
 moved_to_prod = []
 if len(to_production):
@@ -446,7 +448,7 @@ for card in development:
             found = True
     if not found:
         trello.cards.delete(card['id'])
-        
+
 # Have a look at testing and find any items that aren't in the all catalog anymore
 for card in testing:
     app_name, version = get_app_version(card['id'])
