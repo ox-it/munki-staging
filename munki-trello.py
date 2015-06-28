@@ -90,16 +90,16 @@ def migrate_packages(trello_connection, source_cards,
 
     run_makecatalogs = 0
   
-    # create a list of pkgsinfo files
-    pkgsinfo_dirwalk = os.walk(os.path.join(MUNKI_PATH,'pkgsinfo'),
-                                                            topdown=False)
-
     # Find items from the source list, update pkginfo, and change trello
     # card to dest
     for card in source_cards:
         app_name, version = get_app_version(card['id'])
         
         plist = None
+        # create a list of pkgsinfo files
+        pkgsinfo_dirwalk = os.walk(os.path.join(MUNKI_PATH,'pkgsinfo'),
+                                                            topdown=False)
+
         for root, dirs, files in pkgsinfo_dirwalk:
            for file in files:
                # It is conceivable there are broken / non plist files
@@ -121,6 +121,9 @@ def migrate_packages(trello_connection, source_cards,
                    trello_connection.cards.update_idList(card['id'], dest_list_id)
                    run_makecatalogs = run_makecatalogs + 1
                    break
+               else:
+                   plist = None
+
            if plist != None:
               break
 
