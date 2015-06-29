@@ -51,9 +51,11 @@ $ python munki-trello.py --boardid 12345 --key myverylongkey --token myevenlonge
 * ``--to-test-list``: Optional. The name of your 'To Testing' list. Defaults to ``To Testing``.
 * ``--test-list``: Optional. The name of your 'Testing' list. Defaults to ``Testing``.
 * ``--to-prod-list``: Optional. The name of your 'To Production' list. Defaults to ``To Production``.
-* ``--suffix``: The suffix that will be put after the dated 'Production' lists. Defaults to ``Production``.
-* ``--repo-path``: The path to your Munki repository. Defaults to ``/Volumes/Munki``.
-* ``--makecatalogs``: The path to ``makecatalogs``. Defaults to ``/usr/local/munki/makecatalogs``.
+* ``--prod-suffix`` or ``--suffix``: Optional. The suffix that will be put after the dated 'Production' lists. Defaults to ``Production``; if unset packages will be added to the production list.
+* ``--prod-list``: Optional. The name of your 'Production' list. Defaults to ``Production``; only used when ``--prod-suffix`` is unset.
+* ``--repo-path``: Optional. The path to your Munki repository. Defaults to ``/Volumes/Munki``.
+* ``--makecatalogs``: Optional. The path to ``makecatalogs``. Defaults to ``/usr/local/munki/makecatalogs``.
+* ``--date-format``: Optional. The date format to use when creating dated lists. See strftime(1) for details of the formating options.  Defaults to ``%d/%m/%y``.
 
 ## Configuration file
 
