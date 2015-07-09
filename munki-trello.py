@@ -459,13 +459,13 @@ for name in [TO_DEV_LIST, TO_TEST_LIST, TO_PROD_LIST, DEV_LIST, TEST_LIST]:
 # get the 'To' lists, removing these items from the dictionary
 # (so that when we find max_id below, we will ignore these entries)
 # Note that we *should* not get a key error due to the checks above
-id = list_names[TO_DEV_LIST]
+to_dev_id = list_names[TO_DEV_LIST]
 list_positions.pop(TO_DEV_LIST)
-to_development = trello.lists.get_card(id)
+to_development = trello.lists.get_card(to_dev_id)
 
-id = list_names[TO_TEST_LIST]
+to_test_id = list_names[TO_TEST_LIST]
 list_positions.pop(TO_TEST_LIST)
-to_testing     = trello.lists.get_card(id)
+to_testing     = trello.lists.get_card(to_test_id)
 
 id = list_names[TO_PROD_LIST]
 list_positions.pop(TO_PROD_LIST)
@@ -489,17 +489,25 @@ for item in all_catalog:
         missing.append(item)
 
 # Any item that isn't in any board needs to go in to the right one
+# N.B: add tot he 'To' lists, which we will migrate into the real
+# lists shortly (this is to work around a bug with not setting the due
+# dates when staging is on)
 for item in missing:
     name = item['name'] + ' '+item['version']
     comment = '**System Info**\nName: %s\nVersion: %s' % (item['name'], item['version'])
     for catalog in item['catalogs']:
         if catalog == TEST_CATALOG:
-            card = trello.lists.new_card(test_id, name)
+            card = trello.lists.new_card(to_test_id, name)
             trello.cards.new_action_comment(card['id'], comment)
 
         if catalog == DEV_CATALOG:
-            card = trello.lists.new_card(dev_id, name)
+            card = trello.lists.new_card(to_dev_id, name)
             trello.cards.new_action_comment(card['id'], comment)
+
+# re-get the contents of the 'To' lists (as they may have changed due to
+# the above)
+to_development = trello.lists.get_card(to_dev_id)
+to_testing     = trello.lists.get_card(to_test_id)
 
 
 run_makecatalogs = 0
@@ -540,18 +548,19 @@ if len(to_production):
 # Automatically migrate packages from development to test
 # based on their due date.
 # N.B this will honour manually set due dates
+due_days=0
+if opts.test_stage_days:
+    due_days=opts.test_stage_days
+
 if AUTO_STAGE_TO_TEST:
    automigrations =  find_auto_migrations(development)
    if len(automigrations):
        msg = 'Auto migrated from %s to %s as past due date' % (DEV_LIST, TEST_LIST)
-       rc = migrate_packages(trello, automigrations, test_id, TEST_CATALOG, message=msg, auto_move=True)
+       rc = migrate_packages(trello, automigrations, test_id, TEST_CATALOG, message=msg, auto_move=True, due=due_days)
        run_makecatalogs = run_makecatalogs + rc
 
 # Move cards in to_testing to testing. Update the pkginfo
 if len(to_testing):
-    due_days=0
-    if opts.test_stage_days:
-        due_days=opts.test_stage_days
 
     rc = migrate_packages(trello, to_testing, test_id, TEST_CATALOG, due=due_days)
     run_makecatalogs = run_makecatalogs + rc
@@ -559,7 +568,6 @@ if len(to_testing):
 # Move cards in to_development to development. Update the pkginfo
 if len(to_development):
     due_days=0
-    print "DUE:", opts.dev_stage_days
     if opts.dev_stage_days:
         due_days=opts.dev_stage_days
 
