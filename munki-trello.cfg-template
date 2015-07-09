@@ -51,6 +51,11 @@
 # The name of the 'To Development' list in trello
 # Defaults to 'To Development'
 #to_list='To Development'
+# The amount of time in the futre that packages will be auto staged
+# to testing.
+# Note: you have to turn on auto-staging seperately (in the testing
+# section)
+#stage_days=0
 
 # Settings for the testing catalog and list
 [testing]
@@ -63,6 +68,16 @@
 # The name of the 'To Testing' list in trello
 # Defaults to 'To Testing'
 #to_list='To Testing'
+# The amount of time in the futre that packages will be auto staged
+# to production.
+# Note: you have to turn on auto-staging seperately (in the production
+# section)
+#stage_days=0
+# Do we automatically stage packges from developement to testing
+# that are past their due date 
+# Note: you have to set the stage_days time seperately (in the
+# development section)
+#autostage=0
 
 # Settings for the production catalog and list
 [production]
@@ -81,3 +96,8 @@
 # Defaults to Production
 # N.B. will only be used if 'suffix' is unset
 #list=Production
+# Do we automatically stage packges from testing to production
+# that are past their due date 
+# Note: you have to set the stage_days time seperately (in the
+# testing section)
+#autostage=0
