@@ -18,9 +18,9 @@ class MunkiTrelloBoard:
 
         self.config = config
 
-        self.app_key   = self.config.get('main', 'key')
-        self.app_token = self.config.get('main', 'token')
-        self.board_id  = self.config.get('main', 'boardid')
+        self.app_key   = self.config.get_app_key()
+        self.app_token = self.config.get_app_token()
+        self.board_id  = self.config.get_boardid()
       
         self.trello =  trello.TrelloApi(self.app_key)
         self.trello.set_token(self.app_token)
@@ -52,7 +52,7 @@ class MunkiTrelloBoard:
        self.list_id_catalog = {}
        for catalog_config in self.config.munki_catalogs():
           name = catalog_config['catalog']
-          date_format = self.config.get('main', 'date_format')
+          date_format = self.config.get_date_format()
           rc =  self.setup_catalog(catalog_config, date_format)
           self.catalog_lists[name] = rc
           for list_id in rc.get_list_ids():
@@ -160,6 +160,7 @@ class MunkiTrelloBoard:
         self.trello_id_list   = {}
         self.trello_name_list = {}
     
+        print self.board_id
         tlists = self.trello.boards.get_list(self.board_id)
         for list in tlists:
             name = list['name']
