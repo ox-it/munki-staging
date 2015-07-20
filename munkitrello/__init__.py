@@ -1,4 +1,5 @@
 
+import PyRSS2Gen
 from datetime import datetime
 
 class PackageList(dict):
@@ -220,4 +221,25 @@ class Package:
         self.move_munki_catalog(dest_catalog)
 
         self.add_trello_comment(message)
+
+    def rss_item(self, link_template):
+        title = self.key()
+        description = self.get_description()
+        # XXX todo:
+        link = link_template % ( self.name, self.version)
+        guid = link
+        pubdate = self.trelloboard.get_last_move(self.trello_card_id,
+                                                 self.trello_catalog)
+
+        return PyRSS2Gen.RSSItem( title       = title,
+                                  link        = link,
+                                  description = description,
+                                  guid        = PyRSS2Gen.Guid(guid),
+                                  pubDate     = pubdate )
+
+
+    def get_description(self):
+       # open 
+       pkgsinfo = self.munki_repo.read_pkgsinfo(self.pkgsinfo)
+       return pkgsinfo['description']
 

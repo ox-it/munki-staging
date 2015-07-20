@@ -52,22 +52,14 @@ class MunkiTrelloConfig(RawConfigParser):
         return [ dev_config, test_config, prod_config ]
 
     def get_repo_path(self):
-        path = default_settings.repo_path
-        if self.has_option('main', 'repo_path'):
-            path = self.get('main', 'repo_path')
-
-        if self.cli_args.repo_path:
-            path = self.cli_args.repo_path
+        path = self._get_option('main', 'repo_path',
+                                default_value=default_settings.repo_path)
 
         return path
 
     def get_makecatalogs(self):
-        makecatalogs = default_settings.makecatalogs
-        if self.has_option('main', 'makecatalogs'):
-            makecatalogs = self.get('main', 'makecatalogs')
-   
-        if self.cli_args.makecatalogs:
-            makecatalogs = self.cli_args.makecatalogs
+        makecatalogs = self._get_option('main', 'makecatalogs',
+                                default_value=default_settings.makecatalogs)
 
         return makecatalogs
 
@@ -102,8 +94,10 @@ class MunkiTrelloConfig(RawConfigParser):
     def get_date_format(self):
         return self._get_option('main', 'date_format')
 
-    def _get_option(self, section, option_name, cli_name=None):
-        rv = None
+    def _get_option(self, section, option_name,
+                       cli_name=None, default_value=None):
+
+        rv = default_value
 
         if self.has_option(section, option_name):
             rv = self.get(section, option_name)
@@ -111,13 +105,26 @@ class MunkiTrelloConfig(RawConfigParser):
         if cli_name is None:
             cli_name = option_name
 
-        if self.cli_args.__contains__(cli_name):
+        # Only look at cmd line if no config file
+        if self.read_config_files <= 0 and self.cli_args.__contains__(cli_name):
             cli = self.cli_args.__getattribute__(cli_name)
             if cli is not None:
                 rv = cli
 
         return rv
    
+    def get_rssdirectory(self):
+       return self._get_option('rssfeeds', 'rssdir')
+
+    def get_rss_link_template(self):
+       return self._get_option('rssfeeds', 'rss_link_template')
+
+    def get_catalog_link_template(self):
+       return self._get_option('rssfeeds', 'catalog_link_template')
+
+    def get_description_template(self):
+       return self._get_option('rssfeeds', 'get_description_template',
+           default_value = 'Software packages in %s catalog')
 
 class MunkiTrelloConfigCatalogs:
 

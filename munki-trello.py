@@ -8,22 +8,27 @@ from munkitrello import PackageList, Package
 from munkitrello.munki_repo import MunkiRepository
 from munkitrello.munki_trelloboard import MunkiTrelloBoard
 
+import os
+import datetime
 import sys
 
-DEFAULT_CONFIG_FILE_LOCATIONS = [
-    '/etc/munki-trello/munki-trello.cfg',
-    'munki-trello.cfg'
-]
+try:
+    import PyRSS2Gen
+except:
+    pass
 
 print "Reading configuration .... "
 
 config = MunkiTrelloConfig(allow_no_value=True)
-config.read(default_settings.config_file_locations)
+config.cli_parse()
+config.read_config()
+
+app_key = config.get_app_key()
 
 print "Building Munki repository data .... "
 
-munki_repo = MunkiRepository(config.get('main', 'repo_path'),
-                             config.get('main', 'makecatalogs') )
+munki_repo = MunkiRepository(config.get_repo_path(),
+                             config.get_makecatalogs() ) 
 
 print "Building Trello board data .... "
 
@@ -74,7 +79,6 @@ for catalog_name in munki_trello.catalog_lists.keys():
    catalog = munki_trello.catalog_lists[catalog_name] 
    to_id = catalog.to_list['id']
   
-   print to_id
    for package in packagelist.in_list(to_id):
       print "Moving package %s" % package
       package.move_munki_catalog(catalog)
@@ -86,7 +90,46 @@ for catalog_name in munki_trello.catalog_lists.keys():
 for package in packagelist.auto_stage():
     package.auto_stage()   
 
+# Use run_makecatalogs as a flag to signify if things have changed
+# and thus we need to update the RSS feeds
+# (we need to check this before run_update_catalogs as this should
+# reset the flag)
+update_rssfeeds = munki_repo.run_makecatalogs
+#
 munki_repo.run_update_catalogs()
+
+if update_rssfeeds and config.has_section('rssfeeds'):
+
+    print "Building RSS feed items ..."
+
+    rssdir = config.get_rssdirectory()
+    print "R:", rssdir
+    rssfeeds = {}
+    rss_link_template = config.get_rss_link_template()
+
+    for pkg in packagelist.keys():
+        package = packagelist[pkg]
+        catalog = package.munki_catalogs[0]
+        if not rssfeeds.has_key(catalog):
+            rssfeeds[catalog] = []
+        rssfeeds[catalog].append( package.rss_item(rss_link_template) )
+
+    if not os.path.isdir(rssdir):
+        os.mkdir(rssdir)
+
+    catalog_link_template = config.get_catalog_link_template()
+    description_template = config.get_description_template()
+    for feed in rssfeeds.keys():
+        items = rssfeeds[feed]
+        rss = PyRSS2Gen.RSS2(
+                 title = '%s Catalog' % feed, 
+                 link  = catalog_link_template % feed,
+                 description = description_template % feed,
+                 lastBuildDate = datetime.datetime.now(),
+                 items = items )
+        
+        rss.write_xml( open( os.path.join(rssdir, feed), 'w') ) 
+
 
 sys.exit(0)
 

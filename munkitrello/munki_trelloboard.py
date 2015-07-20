@@ -225,6 +225,14 @@ class MunkiTrelloBoard:
         self.trello_id_list[listid]      = list
         self.trello_name_list[list_name] = list
 
+    def get_last_move(self, cardid, catalog):
+        updates = self.trello.cards.get_action(cardid, filter='updateCard')
+        for update in updates:
+           if update.has_key('listAfter') and \
+              update['listAfter']['name'] == catalog:
+               return update['date']
+
+        return None
 
 class MunkiTrelloBoardCatalogList:
     

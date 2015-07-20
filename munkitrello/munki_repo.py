@@ -13,6 +13,7 @@ from . import Package, PackageList
 class MunkiRepository:
   
     def __init__(self, munki_path, makecatalogs='/usr/local/munki/bin/makecatalogs'):
+        print "P:", munki_path
         self.munki_path  = munki_path
 
         self.all_catalog_path = os.path.join(self.munki_path, 'catalogs/all') 
@@ -80,3 +81,7 @@ class MunkiRepository:
         self.update_munki_required(True)
         
         return
+
+    def read_pkgsinfo(self, pkgsinfo):
+
+        return plistlib.readPlist(pkgsinfo)
