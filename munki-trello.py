@@ -43,9 +43,12 @@ for package in munki_repo.packages():
     packagelist.add_or_update_package(package)
 
 print "Building Pacakge list from Trello .... "
-
 for package in munki_trello.packages():
-    packagelist.add_or_update_package(package)
+    if packagelist.has_key( package.key() ):
+        packagelist.update_package(package)
+    else:
+       print "Deleting card without a package %s " % package.key()
+       munki_trello.delete_package(package)
 
 # At this point, we want to
 #   * find any packages missing a trello card a create the card

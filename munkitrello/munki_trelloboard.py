@@ -160,7 +160,6 @@ class MunkiTrelloBoard:
         self.trello_id_list   = {}
         self.trello_name_list = {}
     
-        print self.board_id
         tlists = self.trello.boards.get_list(self.board_id)
         for list in tlists:
             name = list['name']
@@ -233,6 +232,11 @@ class MunkiTrelloBoard:
                return update['date']
 
         return None
+
+    def delete_package(self, package):
+        cardid = package.trello_card_id
+        self.trello.cards.delete( cardid ) 
+
 
 class MunkiTrelloBoardCatalogList:
     
@@ -321,8 +325,6 @@ class MunkiTrelloBoardCatalogList:
          if self._stage_to is not None:
              return self._stage_to
       
-         print self.stage_to_name
-         print self.trelloboard.catalog_lists.keys()
          if self.trelloboard.catalog_lists.has_key(self.stage_to_name):
              self._stage_to = self.trelloboard.catalog_lists[self.stage_to_name]
              return self._stage_to
