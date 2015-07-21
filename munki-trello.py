@@ -103,7 +103,6 @@ if update_rssfeeds and config.has_section('rssfeeds'):
     print "Building RSS feed items ..."
 
     rssdir = config.get_rssdirectory()
-    print "R:", rssdir
     rssfeeds = {}
     rss_link_template = config.get_rss_link_template()
 
@@ -128,7 +127,8 @@ if update_rssfeeds and config.has_section('rssfeeds'):
                  lastBuildDate = datetime.datetime.now(),
                  items = items )
         
-        rss.write_xml( open( os.path.join(rssdir, feed), 'w') ) 
+        feedfile = '%s.xml' % feed
+        rss.write_xml( open( os.path.join(rssdir, feedfile), 'w') ) 
 
 
 sys.exit(0)
