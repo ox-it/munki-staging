@@ -159,6 +159,8 @@ class Package:
         self.trelloboard = trelloboard
         self.trelloboard.add_card_for_package(self)
 
+        self.set_trello_due_date()
+
     def move_trello_list(self, trello_catalog):
 
        # In order to move we must already exist in trello
@@ -176,14 +178,19 @@ class Package:
        list_id = trello_catalog.create_list['id']
        self.trelloboard.trello.cards.update_idList(card_id, list_id)
 
-       due_date = trello_catalog.due_date()
-       if due_date: 
-           self.trelloboard.trello.cards.update_due(card_id, due_date)
-
-           self.trello_due_date = trello_catalog.due_date_epoch
-
        self.trello_catalog = trello_catalog
        self.trello_list_id = list_id
+
+       self.set_trello_due_date()
+
+
+    def set_trello_due_date(self):
+       due_date = self.trello_catalog.due_date()
+       if due_date:
+           self.trelloboard.trello.cards.update_due(self.trello_card_id,
+                                                    due_date)
+
+           self.trello_due_date = self.trello_catalog.due_date_epoch
 
     def move_munki_catalog(self, trello_catalog):
         catalog = trello_catalog.catalog_name
@@ -226,7 +233,9 @@ class Package:
         title = self.key()
         description = self.get_description()
         # XXX todo:
-        link = link_template % ( self.name, self.version)
+        link = link_template % { 'name': self.name,
+                                 'version': self.version,
+                                 'catalog': self.munki_catalogs[0] }
         guid = link
         pubdate = self.trelloboard.get_last_move(self.trello_card_id,
                                                  self.trello_catalog)

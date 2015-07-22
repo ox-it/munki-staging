@@ -59,6 +59,11 @@ for package in munki_trello.packages():
 
 print "Finding missing packages .... "
 
+# Call setup just in case this hasn't happened yet  (as we might have
+# to add to something that doesn't yet exist
+# (XXX) Todo: fix this inelegance
+munki_trello.setup_catalog_lists()
+
 # Find packages not in the trello boards
 # N.B. Will add packages according to underlying munki catalog
 # (and hence into production if that is where it says)
@@ -69,9 +74,6 @@ for pkg in packagelist.missing_trello_card():
 
 print "Migrating To lists .... "
 
-# Call setup just in case this hasn't happened yet 
-# (XXX) Todo: fix this inelegance
-munki_trello.setup_catalog_lists()
 # Migrate the packages from the 'To' trello list into the main list,
 # updating the Munki information as we go
 #
@@ -124,9 +126,9 @@ if update_rssfeeds and config.has_section('rssfeeds'):
     for feed in rssfeeds.keys():
         items = rssfeeds[feed]
         rss = PyRSS2Gen.RSS2(
-                 title = '%s Catalog' % feed, 
-                 link  = catalog_link_template % feed,
-                 description = description_template % feed,
+                 title = '%s Catalog' % feed,
+                 link  = catalog_link_template % { 'catalog': feed },
+                 description = description_template % { 'catalog': feed },
                  lastBuildDate = datetime.datetime.now(),
                  items = items )
         

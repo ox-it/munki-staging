@@ -115,9 +115,7 @@ class MunkiTrelloBoard:
 
         package.trello_card_id = new_card['id']
         package.trello_list_id = new_card['idList']
-
-
-        # BUG: need to set due date if relvant
+        package.trello_catalog = catalog_list
 
         return
    
@@ -280,11 +278,13 @@ class MunkiTrelloBoardCatalogList:
         return map(lambda list: list['id'], self.lists)
 
     def new_card(self, card_title, action_comment ):
-        if self.create_list is not None:
-            listid = self.create_list['id']
-            card_dict = self.trelloboard.trello.lists.new_card(listid, card_title)
-            self.trelloboard.trello.cards.new_action_comment(card_dict['id'], action_comment)
-            return card_dict
+        if self.create_list is None:
+            self.create_new_list()
+
+        listid = self.create_list['id']
+        card_dict = self.trelloboard.trello.lists.new_card(listid, card_title)
+        self.trelloboard.trello.cards.new_action_comment(card_dict['id'], action_comment)
+        return card_dict
     
  
         raise ValueError('Not implemented yet')
