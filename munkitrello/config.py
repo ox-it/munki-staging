@@ -125,6 +125,10 @@ class MunkiTrelloConfig(RawConfigParser):
     def get_catalog_link_template(self):
        return self._get_option('rssfeeds', 'catalog_link_template')
 
+    def get_guid_link_template(self):
+       return self._get_option('rssfeeds', 'guid_link_template')
+
+
     def get_description_template(self):
        return self._get_option('rssfeeds', 'get_description_template',
            default_value = 'Software packages in %s catalog')

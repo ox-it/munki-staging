@@ -229,14 +229,16 @@ class Package:
 
         self.add_trello_comment(message)
 
-    def rss_item(self, link_template, icon_url_template):
+    def rss_item(self, link_template, guid_template, icon_url_template):
         title = self.key()
         description = self.get_description()
         # XXX todo: fix link to be a nice link, but guid unchanging per version
         link = link_template % { 'name': self.name,
                                  'version': self.version,
                                  'catalog': self.munki_catalogs[0] }
-        guid = link
+        guid = guid_template % { 'name': self.name,
+                                 'version': self.version,
+                                 'catalog': self.munki_catalogs[0] }
         pubdate = self.trelloboard.get_last_move(self.trello_card_id,
                                                  self.trello_catalog)
 

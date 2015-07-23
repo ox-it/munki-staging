@@ -1,6 +1,8 @@
 
 from PyRSS2Gen import RSS2,RSSItem, Guid
 
+import datetime
+
 class MunkiTrelloRSSFeed(RSS2):
 
     def __init__(self,
@@ -41,6 +43,7 @@ class MunkiTrelloRSSFeed(RSS2):
         # unexpected side effects (but I don't particularly want to
         # re-engineer the class
         self.rss_attrs['xmlns:media'] = 'http://search.yahoo.com/mrss/'
+        self.rss_attrs['xmlns:dc']    = 'http://purl.org/dc/elements/1.1/'
 
     def add_item(self, rss_item): 
         self.items.append(rss_item)
@@ -77,6 +80,10 @@ class MunkiTrelloRSSItem(RSSItem):
     def publish_extensions(self, handler):
        if self.icon:
            self.icon.publish(handler)
+       if self.pubDate and isinstance(self.pubDate, datetime.datetime):
+           handler.startElement('dc:date', {})
+           handler.characters( self.pubDate.strftime('%Y-%m-%dT%H:%M:%SZ') )
+           handler.endElement('dc:date')
 
 class MediaContentImage:
     """Publish an item Image
