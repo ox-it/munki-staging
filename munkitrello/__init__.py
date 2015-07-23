@@ -1,5 +1,5 @@
 
-import PyRSS2Gen
+from .rssfeed import MediaContentImage, MunkiTrelloRSSItem
 from datetime import datetime
 
 class PackageList(dict):
@@ -229,10 +229,10 @@ class Package:
 
         self.add_trello_comment(message)
 
-    def rss_item(self, link_template):
+    def rss_item(self, link_template, icon_url_template):
         title = self.key()
         description = self.get_description()
-        # XXX todo:
+        # XXX todo: fix link to be a nice link, but guid unchanging per version
         link = link_template % { 'name': self.name,
                                  'version': self.version,
                                  'catalog': self.munki_catalogs[0] }
@@ -240,15 +240,26 @@ class Package:
         pubdate = self.trelloboard.get_last_move(self.trello_card_id,
                                                  self.trello_catalog)
 
-        return PyRSS2Gen.RSSItem( title       = title,
-                                  link        = link,
-                                  description = description,
-                                  guid        = PyRSS2Gen.Guid(guid),
-                                  pubDate     = pubdate )
+        icon_path = self.get_munki_icon()
+        icon_url = None
+        if icon_path is not None:
+            icon_url = icon_url_template % { 'icon_path': icon_path }
 
+        return MunkiTrelloRSSItem( title       = title,
+                                   link        = link,
+                                   description = description,
+                                   guid        = guid,
+                                   pubDate     = pubdate,
+                                   icon_url    = icon_url,
+                                  )
 
     def get_description(self):
        # open 
        pkgsinfo = self.munki_repo.read_pkgsinfo(self.pkgsinfo)
        return pkgsinfo['description']
+
+    def get_munki_icon(self):
+       icon = self.munki_repo.get_icon(self.pkgsinfo)
+       return icon
+
 

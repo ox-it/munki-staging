@@ -119,6 +119,9 @@ class MunkiTrelloConfig(RawConfigParser):
     def get_rss_link_template(self):
        return self._get_option('rssfeeds', 'rss_link_template')
 
+    def get_rss_icon_url_template(self):
+       return self._get_option('rssfeeds', 'icon_url_template')
+
     def get_catalog_link_template(self):
        return self._get_option('rssfeeds', 'catalog_link_template')
 

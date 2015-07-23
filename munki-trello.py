@@ -13,7 +13,7 @@ import datetime
 import sys
 
 try:
-    import PyRSS2Gen
+    from munkitrello.rssfeed import MunkiTrelloRSSFeed
 except:
     pass
 
@@ -104,19 +104,19 @@ update_rssfeeds = munki_repo.run_makecatalogs
 munki_repo.run_update_catalogs()
 
 if update_rssfeeds and config.has_section('rssfeeds'):
-
     print "Building RSS feed items ..."
 
     rssdir = config.get_rssdirectory()
     rssfeeds = {}
     rss_link_template = config.get_rss_link_template()
+    icon_url_template = config.get_rss_icon_url_template()
 
     for pkg in packagelist.keys():
         package = packagelist[pkg]
         catalog = package.munki_catalogs[0]
         if not rssfeeds.has_key(catalog):
             rssfeeds[catalog] = []
-        rssfeeds[catalog].append( package.rss_item(rss_link_template) )
+        rssfeeds[catalog].append( package.rss_item(rss_link_template, icon_url_template) )
 
     if not os.path.isdir(rssdir):
         os.mkdir(rssdir)
@@ -125,7 +125,7 @@ if update_rssfeeds and config.has_section('rssfeeds'):
     description_template = config.get_description_template()
     for feed in rssfeeds.keys():
         items = rssfeeds[feed]
-        rss = PyRSS2Gen.RSS2(
+        rss = MunkiTrelloRSSFeed(
                  title = '%s Catalog' % feed,
                  link  = catalog_link_template % { 'catalog': feed },
                  description = description_template % { 'catalog': feed },

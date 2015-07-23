@@ -13,7 +13,6 @@ from . import Package, PackageList
 class MunkiRepository:
   
     def __init__(self, munki_path, makecatalogs='/usr/local/munki/bin/makecatalogs'):
-        print "P:", munki_path
         self.munki_path  = munki_path
 
         self.all_catalog_path = os.path.join(self.munki_path, 'catalogs/all') 
@@ -83,5 +82,20 @@ class MunkiRepository:
         return
 
     def read_pkgsinfo(self, pkgsinfo):
-
         return plistlib.readPlist(pkgsinfo)
+
+    def get_icon(self, pkgsinfo):
+
+       pkgsinfo = self.read_pkgsinfo(pkgsinfo)
+       if pkgsinfo.has_key('icon_name'):
+           icon_name = os.path.join('icons', pkgsinfo['icon_name'])
+       else:
+           icon_name = os.path.join('icons', pkgsinfo['name'] + '.png')
+
+       icon_path = os.path.join(self.munki_path, icon_name)
+       if os.path.isfile(icon_path):
+           return icon_name
+       if os.path.isfile(icon_path + '.png'):
+           return icon_name
+     
+       return None 
