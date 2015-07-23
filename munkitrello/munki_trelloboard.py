@@ -227,7 +227,7 @@ class MunkiTrelloBoard:
         for update in updates:
            if update.has_key('listAfter') and \
               update['listAfter']['name'] == catalog:
-               return update['date']
+               return datetime.strptime(update['date'], '%Y-%m-%dT%H:%M:%S.000Z')
 
         return None
 
