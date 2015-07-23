@@ -92,13 +92,13 @@ class MediaContentImage:
        focus on providing only what we need for Munki (i.e. providing
        an icon)
     """
-    element_attrs = {}
 
     def __init__( self, url, type=None, isDefault='true',
                    height='300', width='300' ): # Height and width are
                                             # Munki recommended defaults
 
         self.name = 'media:content'
+        self.element_attrs = {}
 
         self.element_attrs['url'] = url
         if type is not None:
