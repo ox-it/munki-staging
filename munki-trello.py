@@ -109,6 +109,7 @@ if update_rssfeeds and config.has_section('rssfeeds'):
     rssdir = config.get_rssdirectory()
     rssfeeds = {}
     rss_link_template = config.get_rss_link_template()
+    guid_template     = config.get_guid_link_template()
     icon_url_template = config.get_rss_icon_url_template()
 
     for pkg in packagelist.keys():
@@ -116,7 +117,7 @@ if update_rssfeeds and config.has_section('rssfeeds'):
         catalog = package.munki_catalogs[0]
         if not rssfeeds.has_key(catalog):
             rssfeeds[catalog] = []
-        rssfeeds[catalog].append( package.rss_item(rss_link_template, icon_url_template) )
+        rssfeeds[catalog].append( package.rss_item(rss_link_template, guid_template, icon_url_template) )
 
     if not os.path.isdir(rssdir):
         os.mkdir(rssdir)
