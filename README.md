@@ -1,6 +1,14 @@
 # Introduction
 
-This is a script that utilises a Trello board to manage the promotion of Munki items through development to testing to production catalogs.  You should make five lists on your Trello board:
+This is a script that utilises a Trello board to manage the promotion of
+Munki items through development to production and then, if desired to
+archival.  You can use any number of steps between development and
+production, but by default the script will expect 3 Munki Catalogs:
+* development
+* testing
+* production
+and this introduction will focus on this example. Taking these
+catalogs as a basis, you would create 5 Trello boards:
 
 * To Development: Items placed in this list will be moved to the development catalog when the script next runs.
 * Development: Items in here are in the Development list. Do not place items directly in here, the script will manage the addition / removal of items to the list.
@@ -8,7 +16,11 @@ This is a script that utilises a Trello board to manage the promotion of Munki i
 * Testing: Items here are in testing.
 * To Production: Items here will be moved into production on the next run.
 
-When items are moved into production, they are moved to a dated list, so you have a history of when items were placed into production. One list will be made per day.
+When items are moved into production, they are (by default) moved to a
+dated list, so you can have a history of when items were placed into
+production. One list will be made per day. However, you can turn off
+this behaviour if you wish. This dated behaviour can also be enabled on
+development and production.
 
 # Usage
 
@@ -32,7 +44,12 @@ $ sudo easy_install trello
 
 ## Running the script
 
-You have two options - you can run the script manually on a machine with the Munki Tools installed (this will run on OS X or Linux, Windows isn't tested), or you can use the [Docker container](https://github.com/grahamgilbert/docker-munki-trello). For more details about the Docker container, see it's [own repository](https://github.com/grahamgilbert/docker-munki-trello) and it's entry on the [Docker Hub](https://registry.hub.docker.com/u/grahamgilbert/munki-trello/).
+You can run the script manually on a machine that has the Munki makecatalogs command installed (this will run on OS X or Linux, Windows isn't tested).
+Note that unlike the upstream version, there is no Docker setup.
+
+In order to get the maximum flexibility from the script, you will need
+to use a configuration file; however most options for the development,
+testing and production setup above are available on the command line.
 
 ### Example
 
@@ -40,12 +57,12 @@ You have two options - you can run the script manually on a machine with the Mun
 $ python munki-trello.py --boardid 12345 --key myverylongkey --token myevenlongertoken --repo-path /Volumes/my-repo
 ```
 
-### Options
+### Command line Options
 
 * ``--boardid``: Required. The ID of your Trello board.
 * ``--key``: Required. Your Trello API key.
 * ``--token``: Required. Your Trello User Token.
-* ``--config``: Optional. A file to read configuation settings from. 
+* ``--config``: Optional. A file to read configuration settings from. 
 * ``--to-dev-list``: Optional. The name of your 'To Development' list. Defaults to ``To Development``.
 * ``--dev-list``: Optional. The name of your 'Development' list. Defaults to ``Development``.
 * ``--to-test-list``: Optional. The name of your 'To Testing' list. Defaults to ``To Testing``.
@@ -59,7 +76,7 @@ $ python munki-trello.py --boardid 12345 --key myverylongkey --token myevenlonge
 
 ## Configuration file
 
-You can give all of the comamand line options in a configuration file,
+You can give all of the command line options in a configuration file,
 which will be read first. The default configuration file
 locations are:
     /etc/munki-trello/munki-trello.cfg
@@ -67,11 +84,107 @@ locations are:
 and these will always be checked. You can also add an extra config
 file location by using the --config command line option.
 
-N.B. Configuration files will be processed *before* command line options.
+N.B. Configuration files will be processed *before* command line options,
+and not all configuration items have a command line equivalent.
 
 Options on the command line will be used in preference to those in the
 configuration file. An example configuration file is in
 munki-trello.cfg-template.
+
+The configuration file has several sections:
+  * the `[main]` section with some global defaults
+  * the optional `[rssfeeds]` section 
+  * Munki repository sections (`[munk_repo_<name>]`)
+  * Munki catalog sections (`[munki_catalog_<name>]`)
+
+#### The `[main]` section
+
+The main section contains global configuration items; the data aboud
+the Trello board, the path to makecatalogs and the date_format to be
+used.
+
+The full options are:
+
+* ``boardid``: The ID of your Trello board.
+* ``key``:  Your Trello API key.
+* ``token``:  Your Trello User Token.
+* ``makecatalogs``: the path to the munki makecatalogs script. Defaults to ``/usr/local/munki/makecatalogs``.
+* ``date-format``: The date format to use when creating dated lists. See strftime(1) for details of the formatting options (note that the script assumes use of numeric options only).  Defaults to ``%d/%m/%y``.
+
+Note that the script requires that `boardid`, `key` and `token are set
+either in the configuration file or on the command line.
+
+#### The `[rssfeeds]` section
+
+If present, this section configures the output of RSSFeeds of packages
+in each catalog, that you can publish so that people know which
+version of a package is in a catalog, and when the software available
+changes. 
+
+In order to use RSSfeeds you will need to install:
+```
+$ sudo easy_install PyRSS2Gen
+```
+You will also need to configure the following; there are no defaults:
+
+*``rssdir``: the directory to publish the RSSFeeds to (one file per catalog, named after the catalog)
+*``rss_link_template``: the link in the RSSFeeds for the item; can use the following templates: `%(name)s', '%(version)s`, `%(catalog)s`
+*``guid_link_template``: a unique link to this version of the package (this will be used by RSS Readers to track the package entry) ; can use the following templates: `%(name)s', '%(version)s`, `%(catalog)s`
+# Have %(catalog)s
+*``catalog_link_template``: a link to information about the catalog; can use the following template: `%(catalog)s`
+*``description_template``: the description of the RSS Channel; can use the following template: `%(catalog)s`
+*``icon_url_template``: a link to the Munki icons;  can use the follo
+wing template: `%(icon_path)s` - the on disk path to the Munki icon
+
+
+As an example, a complete RSS Feed configuration is:
+
+```
+[rssfeeds]
+rssdir=/srv/www/site.orchardox.ac.uk/htdocs/rssfeeds
+rss_link_template=https://site.orchard.ox.ac.uk/packages/%(name)s
+guid_link_template=https://site.orchard.ox.ac.uk/packages/%(name)s/%(version)s
+catalog_link_template=https://site.orchard.ox.ac.uk/catalogs/%(catalog)s
+description_template='Software packages in Orchard %(catalog)s catalog'
+icon_url_template=https://site.orchard.ox.ac.uk/munki/%(icon_path)s
+```
+
+#### The Munki catalog sections `[munki_catalog_<name>]`
+
+The Munki catalog sections contain information about different Munki
+catalogs and their related Trello lists. This information includes any
+configuration of autostaging, and the setting of due dates.
+
+The name in the section title is not used, but it is suggested that
+this follow the name of the Munki catalog, as this will aid
+readability of the configuaration file.
+
+The full options are:
+
+*``list``: ''Required''. The name of the list in the trello board; when using dated lists this is also the suffix used after the date.
+*``to_list``: The name of the list in trello in which to put packages to be migrated into this catalog; defaults to 'To <list>'.
+is as 
+*``catalog``: ''Required''. The name of the Munki catalog that this list is used for.
+*``stage_days``: Default: unset. The number of days that a package remains in this catalog before being autostaged/promoted to the stage_to catalog.  Note: autostaging must be enabled in order for package staging to occur.
+*``stage_to``: The name of the munki repository/config section to
+stage packages to (if auto staging).
+*``autostage``: Default: 0 (off). Whether or not to automatically promote packages based on the Trello card due date.
+*``munki_repo``: The name of the underlying Munki repository (if using more than one Munki repository.
+*``dated_lists``: Default: 0 (off). If new Trello lists are created when packages are moved into this catalog, based on the date the packages are moved.
+
+#### The Munki repository sections `[munki_catalog_<name>]`
+
+These sections document the Munki repository or repositories that
+packages live in. You will require at least one repository. However,
+you can have as may repositories as you would like; an use case for
+this is to have a 'main' repository and a 'retired' repository, and
+migrate older versions of packages into the 'retired' repository,
+which could be on slower storage.
+
+There is one required parameter:
+
+*``repo_path``: The path to the Munki repository
+
 
 # Troubleshooting
 
