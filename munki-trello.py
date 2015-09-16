@@ -34,15 +34,23 @@ print "Building Trello board data .... "
 
 munki_trello = MunkiTrelloBoard(config)
 
-# Build a list of all packages we know about
+# Build the catalog lists
+# (to allow us to only consisder cards in the relevant lists)
+munki_trello.setup_catalog_lists()
+# XXX(aaron): calling this here is probably a bug, as it shouldn't need to
+#             be here other things should call this before they need it;
+#             this was on line 66, but again, I'm not sure if it needed to
+#             be there, as it should be called by the time it
+#             gets there.
 
+# Build a list of all packages we know about
 packagelist = PackageList()
 
 print "Building Pacakge list from Munki Repo .... "
 for package in munki_repo.packages():
     packagelist.add_or_update_package(package)
 
-print "Building Pacakge list from Trello .... "
+print "Building Package list from Trello .... "
 for package in munki_trello.packages():
     if packagelist.has_key( package.key() ):
         packagelist.update_package(package)
@@ -59,10 +67,6 @@ for package in munki_trello.packages():
 
 print "Finding missing packages .... "
 
-# Call setup just in case this hasn't happened yet  (as we might have
-# to add to something that doesn't yet exist
-# (XXX) Todo: fix this inelegance
-munki_trello.setup_catalog_lists()
 
 # Find packages not in the trello boards
 # N.B. Will add packages according to underlying munki catalog
