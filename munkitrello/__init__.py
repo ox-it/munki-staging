@@ -220,9 +220,9 @@ class Package:
           if icon_path is not None:
               old_icon_path = os.path.join(old_repo_base, icon_path)
               new_icon_path = os.path.join(new_repo_base, icon_path)
-              new_icon_dir = os.path.join(new_icon_path, icons)
-              if not os.path.isdirectory(new_icon_path, icons):
-                  os.mkdir(new_icon_path)  # XXX(aaron): mode
+              new_icon_dir  = os.path.dirname(new_icon_path)
+              if not os.path.isdir(new_icon_dir):
+                  os.makedirs(new_icon_dir)
 
               if not os.path.isfile(new_icon_path):  # May exist already
                   copy2(old_icon_path, new_icon_path)    # Copy old -> new

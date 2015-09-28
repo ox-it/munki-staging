@@ -69,7 +69,18 @@ class MunkiTrelloBoard:
 
         self.cards = []
         for card in self.trello_boards.get_card(self.board_id):
-            name, version = self.get_name_version_from_card( card['id'] )
+
+            listid = card['idList']
+            if self.list_id_catalog.has_key(listid):
+                trello_catalog = self.list_id_catalog[ card['idList'] ]
+            else:
+                print "XXX card %s not in recognised list\n" % card['name']
+                continue
+
+            try:
+                name, version = self.get_name_version_from_card( card['id'] )
+            except Exception, e:
+                raise ValueError('Got exception %s trying to find version from card %s' % (e, card['name']) )
 
             due = None 
             if card['due'] is not None:
@@ -79,9 +90,6 @@ class MunkiTrelloBoard:
                 # (hence the .000 in the format)
                 due = datetime.strptime(card['due'], '%Y-%m-%dT%H:%M:%S.000Z')
       
-            if self.list_id_catalog.has_key( card['idList'] ):
-                trello_catalog = self.list_id_catalog[ card['idList'] ]
-
             package = Package(name, version,
                               trelloboard=self,
                               trello_card_id=card['id'],
