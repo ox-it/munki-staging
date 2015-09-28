@@ -142,13 +142,24 @@ class MunkiTrelloBoard:
          to_list_name = config_dict.get('to_list', 'To %s' % list_name)
          stage_days = atoi(config_dict.get('stage_days', '0'))
          autostage  = config_dict.get('autostage', False)
+         if autostage == 1 or autostage == '1':
+             autostage = True
+         if autostage == 0 or autostage == '0':
+             autostage = False
          stage_to = config_dict.get('stage_to', None)
          stage_from = config_dict.get('stage_from', None)
          dated_lists = config_dict.get('dated_lists', False)
- 
+         munki_repo_name = config_dict.get('munki_repo', None)
+         munki_repo = None
+         if munki_repo_name is not None:
+            if self.config.repositories.has_key(munki_repo_name):
+               munki_repo = self.config.repositories[munki_repo_name]
+            
+  
          return MunkiTrelloBoardCatalogList(self,
              list_name, catalog_name, to_list_name, stage_days, autostage,
-             stage_to, stage_from, dated_lists, date_format)
+             stage_to, stage_from, dated_lists, date_format,
+             munki_repo_name, munki_repo)
 
     def get_lists(self):
 
@@ -246,7 +257,7 @@ class MunkiTrelloBoardCatalogList:
     
     def __init__(self, trelloboard,  list_name, catalog_name, to_list_name,
                       stage_days, autostage, stage_to_name, stage_from_name,
-                      dated_lists, date_format):
+                      dated_lists, date_format, munki_repo_name, munki_repo):
 
         self.trelloboard  = trelloboard
 
@@ -262,8 +273,9 @@ class MunkiTrelloBoardCatalogList:
         self._stage_from  = None
         self.dated_lists  = dated_lists
         self.date_format  = date_format
-
-      
+        self.munki_repo_name = munki_repo_name
+        self.munki_repo      = munki_repo
+     
         # To list (as it is easiest being not dated)
         self.to_list = trelloboard.get_list_name(self.to_list_name)
      
@@ -279,6 +291,12 @@ class MunkiTrelloBoardCatalogList:
         self.lists.append(self.to_list) 
 
         return 
+
+    def __str__(self):
+       return self.__unicode__()
+
+    def __unicode__(self):
+        return 'Catalog list for %s' % self.list_name
 
     def get_list_ids(self):
         return map(lambda list: list['id'], self.lists)

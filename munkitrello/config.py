@@ -9,11 +9,30 @@ import argparse
 
 class MunkiTrelloConfig(RawConfigParser):
 
+    # Note: set allow_no_value=True here as the default
+    # (which is what we want, but not he RawConfigParser default)
     def __init__(self, defaults=None, dict_type=_default_dict,
-                 allow_no_value=False):
+                 allow_no_value=True):
 
         RawConfigParser.__init__(self,defaults, dict_type, allow_no_value)
         self.read_config_files = -1
+        self.repositories = {}
+
+    def configured_munki_repositories(self):
+
+        # If we have read a config file, then use it and 
+        # don't allow any other overrides in for the catalogs
+        if self.read_config_files >= 1:
+            return MunkiTrelloRepositories(self)
+
+        # Otherwise, we only have a single catalog:
+        repo_path = self._get_option('main', 'repo_path',
+                          default_value=default_settings.repo_path)
+
+        return { 'repo_name': 'production', 'repo_path': repo_path }
+
+    def add_munki_repo(self, repo):
+        self.repositories[repo.name] = repo
 
     def munki_catalogs(self):
         # If we have read a config file, then use it and 
@@ -50,12 +69,6 @@ class MunkiTrelloConfig(RawConfigParser):
             prod_config['dated_lists'] = 1
 
         return [ dev_config, test_config, prod_config ]
-
-    def get_repo_path(self):
-        path = self._get_option('main', 'repo_path',
-                                default_value=default_settings.repo_path)
-
-        return path
 
     def get_makecatalogs(self):
         makecatalogs = self._get_option('main', 'makecatalogs',
@@ -157,9 +170,12 @@ class MunkiTrelloConfigCatalogs:
 
                return section_config
 
-class MunkiTrelloConfigCatalogs:
+        raise StopIteration() 
 
-    catalog_re = re.compile('munki_catalog_(\w+)')
+# Um ... this is basically the same as the above; do we need it ?
+class MunkiTrelloRepositories:
+
+    mrepo_re = re.compile('munki_repo_(\w+)')
 
     def __init__(self, munki_trello_config):
         self.config = munki_trello_config
@@ -171,15 +187,15 @@ class MunkiTrelloConfigCatalogs:
     def next(self):
         while len(self.sections) > 0:
             section = self.sections.pop()
-            rv = self.catalog_re.match(section)
+            rv = self.mrepo_re.match(section)
             if rv:
-               section_config = {}
+               repo_config = {}
                name = rv.group(1)
-               section_config['section_name'] = name
+               repo_config['repo_name'] = name
                for opt in self.config.options(section):
-                   section_config[opt] = self.config.get(section, opt)
+                   repo_config[opt] = self.config.get(section, opt)
 
-               return section_config
+               return repo_config
 
         raise StopIteration() 
 

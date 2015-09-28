@@ -12,8 +12,10 @@ from . import Package, PackageList
 
 class MunkiRepository:
   
-    def __init__(self, munki_path, makecatalogs='/usr/local/munki/bin/makecatalogs'):
-        self.munki_path  = munki_path
+    def __init__(self, repo_config, makecatalogs='/usr/local/munki/bin/makecatalogs'):
+
+        self.name        = repo_config['repo_name']
+        self.munki_path  = repo_config['repo_path']
 
         self.all_catalog_path = os.path.join(self.munki_path, 'catalogs/all') 
         self.pkgsinfo_path    = os.path.join(self.munki_path, 'pkgsinfo') 
@@ -44,7 +46,6 @@ class MunkiRepository:
                                    pkgsinfo=pkgsinfo,
                                    munki_catalogs=plist['catalogs'],
                                    munki_repo=self)
-                print "found %s %s" % ( plist['name'], plist['version'])
 
                 self.package_list.append(package)
                 

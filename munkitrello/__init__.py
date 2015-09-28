@@ -2,15 +2,22 @@
 from .rssfeed import MediaContentImage, MunkiTrelloRSSItem
 from datetime import datetime
 
+from shutil import copy2
+import os
+from string import join
+
+# From http://stackoverflow.com/questions/3167154/how-to-split-a-dos-path-into-its-components-in-python
+def split_path(p):
+    a,b = os.path.split(p)
+    return (split_path(a) if len(a) and len(b) else []) + [b]
+
 class PackageList(dict):
  
    def add_package(self,package):
        self[package.key()] = package
 
    def add_or_update_package(self,package):
-       print package
        if self.has_key(package.key()):
-           print 'Updating %s' % package
            self.update_package(package)
        else:
            self.add_package(package)
@@ -69,9 +76,8 @@ class PackageListAutoStageList:
                continue
         
            if package.trello_catalog.autostage == False:
-               next
+               continue
            
-           print package.trello_due_date
            difference = self.now - package.trello_due_date 
            if difference.total_seconds() > 0:
                return package
@@ -182,6 +188,94 @@ class Package:
        self.trello_list_id = list_id
 
        self.set_trello_due_date()
+
+       if self.munki_repo.name != self.trello_catalog.munki_repo.name:
+           self.migrate_package()
+
+    def migrate_package(self):
+       
+          print "Migrating package from", \
+                self.munki_repo.name,"to",\
+                self.trello_catalog.munki_repo_name
+
+          if self.trello_catalog.munki_repo is None:
+             import sys
+             print "CAN'T MIGRATE to empty repo !"
+             sys.exit(1)
+          
+          old_repo_base = self.munki_repo.munki_path
+          new_repo_base = self.trello_catalog.munki_repo.munki_path
+
+          # Move: 
+          #   pkgsinfo file
+          #   installer items
+          #   icons
+          # but in the reverse order (as the repository may not work
+          # if there is a valid pkgsinfo file and no package)
+
+          # XXX CHECK FOR ERRORS !!!!
+
+          # icon file (may not exist)
+          icon_path = self.get_munki_icon()
+          if icon_path is not None:
+              old_icon_path = os.path.join(old_repo_base, icon_path)
+              new_icon_path = os.path.join(new_repo_base, icon_path)
+              new_icon_dir = os.path.join(new_icon_path, icons)
+              if not os.path.isdirectory(new_icon_path, icons):
+                  os.mkdir(new_icon_path)  # XXX(aaron): mode
+
+              if not os.path.isfile(new_icon_path):  # May exist already
+                  copy2(old_icon_path, new_icon_path)    # Copy old -> new
+
+          #   installer_item_location (aka .dmg file)
+          pkgsinfo = self.munki_repo.read_pkgsinfo(self.pkgsinfo)
+          installer_item_location = pkgsinfo['installer_item_location']
+          old_installer_path = os.path.join(old_repo_base, 'pkgs',
+                                            installer_item_location)
+          new_installer_path = os.path.join(new_repo_base, 'pkgs',
+                                            installer_item_location)
+          # MAKE PATH TO PKG FILE
+          new_basedir = os.path.dirname(new_installer_path)
+          if not os.path.isdir(new_basedir):
+              os.makedirs(new_basedir)
+          copy2(old_installer_path, new_installer_path)
+          
+          new_pkgsinfo = self.get_new_pkgsinfo( old_repo_base, new_repo_base )
+
+          new_pkgdir = os.path.dirname(new_pkgsinfo)
+          if not os.path.isdir(new_pkgdir):
+              os.makedirs(new_pkgdir)
+
+          copy2(self.pkgsinfo, new_pkgsinfo)
+ 
+          # Clean up *empty dirs* ?
+          os.unlink(old_installer_path)
+          os.unlink(self.pkgsinfo)
+
+          # Update repo related meta data and flag for updates
+          self.pkgsinfo   = new_pkgsinfo
+          #
+          self.munki_repo.update_munki_required(flag=True)
+          self.trello_catalog.munki_repo.update_munki_required(flag=True)
+          #
+          self.munki_repo = self.trello_catalog.munki_repo
+
+
+    def get_new_pkgsinfo(self, oldroot, newroot):
+
+        pkgpath_array      = split_path( os.path.normpath(self.pkgsinfo) )
+        pkgpath_array_loop = split_path( os.path.normpath(self.pkgsinfo) )
+        oldroot_array      = split_path( os.path.normpath(oldroot) )
+
+        for dir in pkgpath_array_loop:
+            if len(oldroot_array) > 0 and dir == oldroot_array[0]:
+                pkgpath_array.pop(0)
+                oldroot_array.pop(0)
+            else:
+                break
+
+        newpkgs = join(pkgpath_array, os.sep)
+        return os.path.join(newroot,newpkgs)
 
 
     def set_trello_due_date(self):

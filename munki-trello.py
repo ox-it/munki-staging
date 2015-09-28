@@ -19,28 +19,27 @@ except:
 
 print "Reading configuration .... "
 
-config = MunkiTrelloConfig(allow_no_value=True)
+config = MunkiTrelloConfig()
 config.cli_parse()
 config.read_config()
 
-app_key = config.get_app_key()
-
-print "Building Munki repository data .... "
-
-munki_repo = MunkiRepository(config.get_repo_path(),
-                             config.get_makecatalogs() ) 
-
-print "Building Trello board data .... "
-
-munki_trello = MunkiTrelloBoard(config)
-
 # Build a list of all packages we know about
-
 packagelist = PackageList()
 
-print "Building Pacakge list from Munki Repo .... "
-for package in munki_repo.packages():
-    packagelist.add_or_update_package(package)
+print "Building Munki repository data and packages .... "
+
+makecatalogs = config.get_makecatalogs()
+for mrepo_cfg in config.configured_munki_repositories():
+    munki_repo = MunkiRepository(mrepo_cfg, makecatalogs)
+    print "Finding packages in repository", munki_repo.name, "..."
+    for package in munki_repo.packages():
+        packagelist.add_or_update_package(package)
+   
+    # Remember for future use
+    config.add_munki_repo( munki_repo )
+
+print "Building Trello board data .... "
+munki_trello = MunkiTrelloBoard(config)
 
 print "Building Pacakge list from Trello .... "
 for package in munki_trello.packages():
@@ -75,7 +74,7 @@ for pkg in packagelist.missing_trello_card():
 print "Migrating To lists .... "
 
 # Migrate the packages from the 'To' trello list into the main list,
-# updating the Munki information as we go
+# updating the Munki in formation as we go
 #
 # (XXX) Todo: is there a right way to do this, or don't we
 #             care ? Origingally this went prod, testing, unstable
@@ -95,13 +94,21 @@ for catalog_name in munki_trello.catalog_lists.keys():
 for package in packagelist.auto_stage():
     package.auto_stage()   
 
+
 # Use run_makecatalogs as a flag to signify if things have changed
 # and thus we need to update the RSS feeds
 # (we need to check this before run_update_catalogs as this should
 # reset the flag)
-update_rssfeeds = munki_repo.run_makecatalogs
 #
-munki_repo.run_update_catalogs()
+update_rssfeeds = False
+
+for key in config.repositories.keys():
+  
+    if config.repositories[key].run_makecatalogs:
+        update_rssfeeds = True
+
+    print "Updating munki catalogs in", key
+    config.repositories[key].run_update_catalogs()
 
 if update_rssfeeds and config.has_section('rssfeeds'):
     print "Building RSS feed items ..."
@@ -136,6 +143,8 @@ if update_rssfeeds and config.has_section('rssfeeds'):
         feedfile = '%s.xml' % feed
         rss.write_xml( open( os.path.join(rssdir, feedfile), 'w') ) 
 
+for pkg in packagelist.keys():
+    package = packagelist[pkg]
+#    print package.munki_repo.name
 
 sys.exit(0)
-
