@@ -1,0 +1,217 @@
+#
+# Munki Trello Settings
+#
+# Settings for munki-trello will be read from this file; if not
+# specified here, they will take the default value.
+#
+# Certian values given here can be overwritten on the command line,
+#
+# The default configuration file locations are:
+#    /etc/munki-trello/munki-trello.cfg 
+#    ./munki-trello.cfg 
+#
+# You can add an extra config file location by using the --config 
+# command line option. N.B. Configuration files will be processed 
+# *before* command line options
+#
+# This file has the following required sections:
+#   * main - main application settings
+#   * munki_repo_<name> - the base munki repository 
+# Any number of munki repositories can be used; note that each
+# repository can only have a single catalog>
+# It can have any number of Catalogs which are given in sections:
+#   * munki_catalog_<identifier>
+# where <identifier> is a suggesitive name for the catalog.
+# If no configuration file is given the software will use 
+# the default catalogs (but this is not well tested):
+#
+#   * development - settings about the development board/catalog
+#   * testing - settings about the testings board/catalog
+#   * production - settings about the production board/catalog
+#
+# There is a final optional section:
+#   * rssfeeds
+# will will configure the output of # an RSS feed pre catalog with
+# details of the software; note that you will need to install
+# PyRSS2Gen in order for this to work
+#
+# The order of the sections does not matter
+#
+# See README.md for more information
+#
+
+[main]
+# The ID of the trello board - the board ID is the part after ``/b``
+# and before the name of your board in the trello URL
+# This is required; there is no default
+#boardid=
+# The API key and user token for trello - see README.md about generating
+# this and the token that follows
+# These are required; there is no default
+#key=
+#token=
+# The path to the munki `makecatalogs`` command.
+# Defaults to ``/usr/local/munki/makecatalogs``
+# makecatalogs=/usr/local/munki/makecatalogs
+# The path to the Munki repository being used
+# Defaults to ``/Volumes/Munki``
+# repo_path=/Volumes/Munki
+# The date format to use when creating dated lists.
+# See strftime(1) for details of formatting options.
+# Defaults to ``%d/%m/%y``
+# date_format=%d/%m/%y
+
+#
+# Munki Repositories
+# 
+# There must be at least one munki repository defined, but beyon this
+# there can be any number of munki repository sections, which
+# are specified by the name [munki_repo_<reponame>].
+# See the README.md file for more information
+# 
+#[munki_repo_software]
+#repo_path=/Volumes/Munki/Software
+#
+
+#
+# RSS Feeds 
+# If present this section will configure the ouput of an RSS Feed
+# which will; contain details of what software (name and version)
+# is in each catalog.
+# Omitting this section will turn off the generation of RSSFeeds.
+#
+# Each directive is required; there are no defaults.
+#[rssfeeds]
+#rssdir=/Volumes/Munki/htdocs/rssfeeds
+#rss_link_template=https://site.orchard.ox.ac.uk/packages/%(name)s
+#guid_link_template=https://site.orchard.ox.ac.uk/packages/%(name)s/%(version)s
+#catalog_link_template=https://site.orchard.ox.ac.uk/catalogs/%(catalog)s
+#description_template='Software packages in Site Orchard %(catalog)s catalog'
+#icon_url_template=https://site.orchard.ox.ac.uk/munki/%(icon_path)s
+#
+
+#
+# Munki Catalog Sections
+#
+# The Munki catalog sections contain information about different Munki
+# catalogs and their related Trello lists. This information includes any
+# configuration of autostaging, and the setting of due dates.
+# 
+# You can have any number of these sections 
+#
+# Below we give an example following the default configiration
+# 
+#
+
+#[munki_catalog_development]
+# The name trello list for development
+# Defaults to Development
+#list=Development
+# The munki repository to use
+#munki_repo=software
+# The name of the munki catalog for development
+# Defaults to development
+#catalog=development
+# The name of the 'To Development' list in trello
+# Defaults to 'To <list>', i.e. 'To Development'
+#to_list='To Development'
+# If new Trello lists are created when packages are
+# moved into this catalog, based on the date the packages are moved
+#dated_lists=0
+
+
+#[munki_catalog_test]
+# The name trello list for testing
+# Defaults to Testing
+#list=Testing
+# The munki repository to use
+#munki_repo=software
+# The name of the munki catalog for testing
+# Defaults to test
+#catalog=testing
+# The name of the 'To Testing' list in trello
+# Defaults to 'To <list>', i.e. 'To Testing'
+#to_list='To Testing'
+# If new Trello lists are created when packages are
+# moved into this catalog, based on the date the packages are moved
+# Settings for the testing catalog and list
+#dated_lists=0
+
+
+#[munki_catalog_production]
+# The name trello list for production
+# Defaults to Production
+# The munki repository to use
+#munki_repo=software
+#list=Production
+# The name of the munki catalog for production
+# Defaults to production
+#catalog=production
+# The name of the 'To Production' list in trello
+# Defaults to 'To <list>', i.e. 'To Production'
+#to_list='To Production'
+# If new Trello lists are created when packages are
+# moved into this catalog, based on the date the packages are moved
+# Settings for the production catalog and list
+#dated_lists=1
+
+
+#
+# An example configuration with automatic staging and archiving
+# of software into a different Munki repositiory
+# 
+# Firstly, define the additional repository:
+#
+#[munki_repo_archived]
+#repo_path=/Volumes/munki/archived
+#
+# Then we define 4 catalogs:
+#   * unstable
+#   * testing
+#   * stable
+#   * stable
+#
+#[munki_catalog_development]
+# Define the Trello list, accepting the default name for the 'To' list
+#list=Unstable
+# The Munki repository and catalog to use
+#munki_repo=software
+#catalog=unstable
+# To autostage we need to know how many days we wait before staging
+# (based on trello card due date - which can be overwritten by hand)
+# and where to stage to
+#autostage=1
+#stage_days=10
+#stage_to=testing
+#
+#
+# The testing catalog
+#[munki_catalog_testing]
+# Define the trello list, again accepting the default 'To' list
+#list=Testing
+# The Munki repostiory and catalog:
+#munki_repo=software
+#catalog=testing
+# Turn on autostaging every 10 days:
+#autostage=1
+#stage_days=10
+#stage_to=stable
+#
+# The Stable catalog - note this doesn't stage as we move
+# into the archive by hand
+#
+#[munki_catalog_production]
+#list=Stable
+#munki_repo=software
+#catalog=stable
+#
+#autostage=0
+#stage_from=testing
+#
+# Finally the retired catalog, with a different Munki repository
+# (perhaps held on slower disks that the main repository)
+#[munki_catalog_retired]
+#list=Retired
+#munki_repo=retired
+#catalog=retired
+#
