@@ -4,9 +4,11 @@ This is a script that utilises a Trello board to manage the promotion of
 Munki items through development to production and then, if desired to
 archival.  You can use any number of steps between development and
 production, but by default the script will expect 3 Munki Catalogs:
+
 * development
 * testing
 * production
+
 and this introduction will focus on this example. Taking these
 catalogs as a basis, you would create 5 Trello boards:
 
