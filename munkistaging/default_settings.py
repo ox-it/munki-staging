@@ -18,8 +18,8 @@
 #
 
 config_file_locations = [
-    '/etc/munki-trello/munki-trello.cfg',
-    'munki-trello.cfg'
+    '/etc/munki-staging/munki-staging.cfg',
+    'munki-staging.cfg'
 ]
 
 date_format='%d/%m/%y'
@@ -44,7 +44,7 @@ DEFAULT_MUNKI_PROD_CATALOG='production'
 # command line options
 # List; contains tuples: ('option', 'help', Default)
 cli_options = [
-    ("--config", "Name of configuration file; program will try to read '/etc/munki-trello/munki-trello.cfg' and './munki-trello.cfg' by default, appending this configuration file to the end of the list; configuration file values will be overridden by those on the command line and last match wins", None),
+    ("--config", "Name of configuration file; program will try to read '/etc/munki-staging/munki-staging.cfg' and './munki-staging.cfg' by default, appending this configuration file to the end of the list; configuration file values will be overridden by those on the command line and last match wins", None),
 
     ("--boardid", "Trello board ID.", None),
     ("--key", "Trello API key. See README for details on how to get one.", None),

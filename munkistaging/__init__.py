@@ -14,7 +14,7 @@
 # permissions and limitations under the License.
 #
 
-from .rssfeed import MediaContentImage, MunkiTrelloRSSItem
+from .rssfeed import MediaContentImage, MunkiStagingRSSItem
 from datetime import datetime
 
 from shutil import copy2
@@ -356,7 +356,7 @@ class Package:
         if icon_path is not None:
             icon_url = icon_url_template % { 'icon_path': icon_path }
 
-        return MunkiTrelloRSSItem( title       = title,
+        return MunkiStagingRSSItem( title       = title,
                                    link        = link,
                                    description = description,
                                    guid        = guid,

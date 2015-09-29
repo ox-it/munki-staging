@@ -15,26 +15,26 @@
 # permissions and limitations under the License.
 #
 
-import munkitrello.default_settings as default_settings
+import munkistaging.default_settings as default_settings
 
-from munkitrello.config import MunkiTrelloConfig
+from munkistaging.config import MunkiStagingConfig
 
-from munkitrello import PackageList, Package
-from munkitrello.munki_repo import MunkiRepository
-from munkitrello.munki_trelloboard import MunkiTrelloBoard
+from munkistaging import PackageList, Package
+from munkistaging.munki_repo import MunkiRepository
+from munkistaging.munki_trelloboard import MunkiTrelloBoard
 
 import os
 import datetime
 import sys
 
 try:
-    from munkitrello.rssfeed import MunkiTrelloRSSFeed
+    from munkistaging.rssfeed import MunkiStagingRSSFeed
 except:
     pass
 
 print "Reading configuration .... "
 
-config = MunkiTrelloConfig(allow_no_value=True)
+config = MunkiStagingConfig(allow_no_value=True)
 config.cli_parse()
 config.read_config()
 
@@ -152,7 +152,7 @@ if update_rssfeeds and config.has_section('rssfeeds'):
     description_template = config.get_description_template()
     for feed in rssfeeds.keys():
         items = rssfeeds[feed]
-        rss = MunkiTrelloRSSFeed(
+        rss = MunkiStagingRSSFeed(
                  title = '%s Catalog' % feed,
                  link  = catalog_link_template % { 'catalog': feed },
                  description = description_template % { 'catalog': feed },

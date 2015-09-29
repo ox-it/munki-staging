@@ -22,7 +22,7 @@ from . import default_settings
 
 import argparse
 
-class MunkiTrelloConfig(RawConfigParser):
+class MunkiStagingConfig(RawConfigParser):
 
     # Note: set allow_no_value=True here as the default
     # (which is what we want, but not he RawConfigParser default)
@@ -38,7 +38,7 @@ class MunkiTrelloConfig(RawConfigParser):
         # If we have read a config file, then use it and 
         # don't allow any other overrides in for the catalogs
         if self.read_config_files >= 1:
-            return MunkiTrelloRepositories(self)
+            return MunkiStagingRepositories(self)
 
         # Otherwise, we only have a single catalog:
         repo_path = self._get_option('main', 'repo_path',
@@ -53,7 +53,7 @@ class MunkiTrelloConfig(RawConfigParser):
         # If we have read a config file, then use it and 
         # don't allow any other overrides in for the catalogs
         if self.read_config_files >= 1:
-            return MunkiTrelloConfigCatalogs(self)
+            return MunkiStagingConfigCatalogs(self)
    
         print "No configu"
         # If we haven't then use the CLI options (or the defaults)
@@ -161,13 +161,13 @@ class MunkiTrelloConfig(RawConfigParser):
        return self._get_option('rssfeeds', 'get_description_template',
            default_value = 'Software packages in %s catalog')
 
-class MunkiTrelloConfigCatalogs:
+class MunkiStagingConfigCatalogs:
 
     catalog_re = re.compile('munki_catalog_(\w+)')
 
-    def __init__(self, munki_trello_config):
-        self.config = munki_trello_config
-        self.sections = munki_trello_config.sections()
+    def __init__(self, munki_staging_config):
+        self.config = munki_staging_config
+        self.sections = munki_staging_config.sections()
     
     def __iter__(self):
         return self
@@ -188,13 +188,13 @@ class MunkiTrelloConfigCatalogs:
         raise StopIteration() 
 
 # Um ... this is basically the same as the above; do we need it ?
-class MunkiTrelloRepositories:
+class MunkiStagingRepositories:
 
     mrepo_re = re.compile('munki_repo_(\w+)')
 
-    def __init__(self, munki_trello_config):
-        self.config = munki_trello_config
-        self.sections = munki_trello_config.sections()
+    def __init__(self, munki_staging_config):
+        self.config = munki_staging_config
+        self.sections = munki_staging_config.sections()
     
     def __iter__(self):
         return self

@@ -18,7 +18,7 @@ from PyRSS2Gen import RSS2,RSSItem, Guid
 
 import datetime
 
-class MunkiTrelloRSSFeed(RSS2):
+class MunkiStagingRSSFeed(RSS2):
 
     def __init__(self,
                  title,
@@ -33,7 +33,7 @@ class MunkiTrelloRSSFeed(RSS2):
                  lastBuildDate = None, # a datetime
                  
                  categories = None, # list of strings or Category
-                 generator = 'MunkiTrelloRSSFeed 1.0',
+                 generator = 'MunkiStagingRSSFeed 1.0',
                  docs = "https://docs.orchard.ox.ac.uk/rss",
                  cloud = None,    # a Cloud
                  ttl = None,      # integer number of minutes
@@ -64,7 +64,7 @@ class MunkiTrelloRSSFeed(RSS2):
         self.items.append(rss_item)
         
 
-class MunkiTrelloRSSItem(RSSItem):
+class MunkiStagingRSSItem(RSSItem):
 
     def __init__(self,
                  title = None,  # string
