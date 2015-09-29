@@ -181,6 +181,10 @@ class Package:
         self.trelloboard.add_card_for_package(self)
 
         self.set_trello_due_date()
+        # Flag for update (to regenerate RSS feeds if any)
+        # This is a bit gratitous, but the only other way
+        # is to add a seperate flag for this ... 
+        self.munki_repo.update_munki_required(flag=True)
 
     def move_trello_list(self, trello_catalog):
 
@@ -202,6 +206,11 @@ class Package:
        self.trello_catalog = trello_catalog
        self.trello_list_id = list_id
 
+       # If people aren't autostaging, then resetting the due date
+       # might be unhelpful:
+       self.reset_due_date()
+
+       # Set the due date (if autostaging is on)
        self.set_trello_due_date()
 
        if self.munki_repo.name != self.trello_catalog.munki_repo.name:
@@ -339,7 +348,7 @@ class Package:
         self.add_trello_comment(message)
 
     def rss_item(self, link_template, guid_template, icon_url_template):
-        title = self.key()
+        title = self.get_display_name()
         description = self.get_description()
         # XXX todo: fix link to be a nice link, but guid unchanging per version
         link = link_template % { 'name': self.name,
@@ -372,5 +381,14 @@ class Package:
     def get_munki_icon(self):
        icon = self.munki_repo.get_icon(self.pkgsinfo)
        return icon
+
+    def get_display_name(self):
+       pkgsinfo = self.munki_repo.read_pkgsinfo(self.pkgsinfo)
+       return pkgsinfo['display_name'] 
+
+    def card_name(self):
+        title = self.get_display_name()
+        return '%s %s' % (title, self.version)
+  
 
 

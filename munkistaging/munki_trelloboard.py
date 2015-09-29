@@ -134,7 +134,7 @@ class MunkiTrelloBoard:
         card_action_comment = self.card_comment % ( package.name, package.version)
 
         catalog_list = self.list_from_catalog( package.munki_catalogs[0] )
-        new_card = catalog_list.new_card( package.key(), card_action_comment )
+        new_card = catalog_list.new_card( package.card_name(), card_action_comment )
 
         package.trello_card_id = new_card['id']
         package.trello_list_id = new_card['idList']
