@@ -202,6 +202,11 @@ class Package:
        self.trello_catalog = trello_catalog
        self.trello_list_id = list_id
 
+       # If people aren't autostaging, then resetting the due date
+       # might be unhelpful:
+       self.reset_due_date()
+
+       # Set the due date (if autostaging is on)
        self.set_trello_due_date()
 
        if self.munki_repo.name != self.trello_catalog.munki_repo.name:
