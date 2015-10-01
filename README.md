@@ -203,7 +203,7 @@ Make sure the combination of ``name`` and ``version`` is unique. For speed, the 
 Copyright (c) 2015 University of Oxford
 
 This is based on an original script by Graham Gilbert
-<graham@grahamgilbert.com> with significant rewriteing by the Unix
+<graham@grahamgilbert.com> with significant rewriting by the Unix
 Services Team within IT Services, University of Oxford.
 
 
