@@ -24,6 +24,8 @@ production. One list will be made per day. However, you can turn off
 this behaviour if you wish. This dated behaviour can also be enabled on
 development and production.
 
+![](https://github.com/ox-it/munki-staging/wiki/images/oxford-trello-board.png)
+
 # Usage
 
 ## Setup
