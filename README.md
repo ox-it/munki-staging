@@ -138,12 +138,9 @@ You will also need to configure the following; there are no defaults:
 *``rssdir``: the directory to publish the RSSFeeds to (one file per catalog, named after the catalog)
 *``rss_link_template``: the link in the RSSFeeds for the item; can use the following templates: `%(name)s', '%(version)s`, `%(catalog)s`
 *``guid_link_template``: a unique link to this version of the package (this will be used by RSS Readers to track the package entry) ; can use the following templates: `%(name)s', '%(version)s`, `%(catalog)s`
-# Have %(catalog)s
 *``catalog_link_template``: a link to information about the catalog; can use the following template: `%(catalog)s`
 *``description_template``: the description of the RSS Channel; can use the following template: `%(catalog)s`
-*``icon_url_template``: a link to the Munki icons;  can use the follo
-wing template: `%(icon_path)s` - the on disk path to the Munki icon
-
+*``icon_url_template``: a link to the Munki icons;  can use the following template: `%(icon_path)s` - the on disk path to the Munki icon
 
 As an example, a complete RSS Feed configuration is:
 
@@ -156,6 +153,7 @@ catalog_link_template=https://site.orchard.ox.ac.uk/catalogs/%(catalog)s
 description_template='Software packages in Orchard %(catalog)s catalog'
 icon_url_template=https://site.orchard.ox.ac.uk/munki/%(icon_path)s
 ```
+
 
 #### The Munki catalog sections `[munki_catalog_<name>]`
 
