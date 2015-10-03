@@ -92,6 +92,12 @@ class PackageListAutoStageList:
         
            if package.trello_catalog.autostage == False:
                continue
+
+           # Schedule for this catalog
+           if package.trello_catalog.autostage_schedule is not None:
+               # There is a schedule, so we check it
+               if package.trello_catalog.autostage_schedule.stage_now() == False:
+                   continue
            
            difference = self.now - package.trello_due_date 
            if difference.total_seconds() > 0:

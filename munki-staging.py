@@ -110,8 +110,11 @@ for catalog_name in munki_trello.catalog_lists.keys():
 # Note: no package is currently in a 'To' list, 
 # so we can autostage if desired
 
-for package in packagelist.auto_stage():
-    package.auto_stage()   
+autostage_schedule = config.autostage_schedule()
+if autostage_schedule is None or autostage_schedule.stage_now():
+    print "About to autostage ... "
+    for package in packagelist.auto_stage():
+        package.auto_stage()   
 
 
 # Use run_makecatalogs as a flag to signify if things have changed

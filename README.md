@@ -96,6 +96,7 @@ The configuration file has several sections:
   * the optional `[rssfeeds]` section 
   * Munki repository sections (`[munk_repo_<name>]`)
   * Munki catalog sections (`[munki_catalog_<name>]`)
+  * Auto stating schedule sections (`[schedule]` and/or `[schedule_<name>]`)
 
 #### The `[main]` section
 
@@ -130,7 +131,6 @@ You will also need to configure the following; there are no defaults:
 *``rssdir``: the directory to publish the RSSFeeds to (one file per catalog, named after the catalog)
 *``rss_link_template``: the link in the RSSFeeds for the item; can use the following templates: `%(name)s', '%(version)s`, `%(catalog)s`
 *``guid_link_template``: a unique link to this version of the package (this will be used by RSS Readers to track the package entry) ; can use the following templates: `%(name)s', '%(version)s`, `%(catalog)s`
-# Have %(catalog)s
 *``catalog_link_template``: a link to information about the catalog; can use the following template: `%(catalog)s`
 *``description_template``: the description of the RSS Channel; can use the following template: `%(catalog)s`
 *``icon_url_template``: a link to the Munki icons;  can use the follo
@@ -185,6 +185,69 @@ There is one required parameter:
 
 *``repo_path``: The path to the Munki repository
 
+#### Auto stating schedule sections (`[schedule]`) and/or `[schedule_<name>]`)
+
+These sections allows you to control when autostaging happens.
+
+''NOTE'' You need to install dateutil in order to use this; if you
+do not install this python module, the schedule section will be
+ignored.
+
+Clearly, if you have not configured autostaging, then these sections will
+have no effect.
+
+If autostaging is configured, by default, staging will happen every
+time the script is run, if packages meet the critera to be staged.
+
+If you add the optional section `[schedule]`, then autostaging will only
+happen if the script is running in one of the periods defined.
+
+If you add the optional section `[schedule_<name>]`, then autostaging 
+for the catalog `<name> will only happen if the script is running in
+one of the periods defined in thie section.
+
+Note: if you define both `[schedule]` and `[schedule_<name>]`, the
+global section takes precedence: staging will only happen if you are
+in a period defined in both the global section `[schedule]` *and* the 
+catalog section `[schedule_<name>]`.
+
+The optional parameters have the format:
+
+* ``<Day of Week>=timeperiod[,timeperiod]+``
+
+where <Day of the week> is the long name of the day of the week in the
+current locale and time periods are start ``time-end time`` where each
+time is specified by HH:MM. For example, to only stage on Monday to Thursday
+between 09:00 and 17:00 you have the section:
+
+[schedule]
+Monday=09:00-17:00
+Tuesday=09:00-17:00
+Wednesday=09:00-17:00
+Thursday=09:00-17:00
+
+Note: specifying an empty section will turn off staging.
+
+## Autostaging
+
+As described above, you can turn on autostaging on a
+per-trello list basis. A package will auto stage if all of the
+following are true:
+  
+  * If an autostaging period is defined, the script is run in this period
+   * If no period is defined autostaging will always run
+  * If the current package catalog has autostaging enabled
+  * If the current package due date is in the past
+
+Thus if you have 3 catalogs:
+
+* development
+* testing
+* production
+
+then in order to stage packages into production you need to turn on
+auto staging for testing. In order to stage packages into testing, you
+need to turn on autostaging for development.
 
 # Troubleshooting
 
