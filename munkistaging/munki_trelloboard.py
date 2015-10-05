@@ -177,12 +177,14 @@ class MunkiTrelloBoard:
          if munki_repo_name is not None:
             if self.config.repositories.has_key(munki_repo_name):
                munki_repo = self.config.repositories[munki_repo_name]
-            
+
+         autostage_schedule = \
+             self.config.autostage_schedule( config_dict['section_name'] )
   
          return MunkiTrelloBoardCatalogList(self,
              list_name, catalog_name, to_list_name, stage_days, autostage,
              stage_to, stage_from, dated_lists, date_format,
-             munki_repo_name, munki_repo)
+             munki_repo_name, munki_repo, autostage_schedule)
 
     def get_lists(self):
 
@@ -280,7 +282,8 @@ class MunkiTrelloBoardCatalogList:
     
     def __init__(self, trelloboard,  list_name, catalog_name, to_list_name,
                       stage_days, autostage, stage_to_name, stage_from_name,
-                      dated_lists, date_format, munki_repo_name, munki_repo):
+                      dated_lists, date_format, munki_repo_name, munki_repo,
+                      autostage_schedule):
 
         self.trelloboard  = trelloboard
 
@@ -298,6 +301,7 @@ class MunkiTrelloBoardCatalogList:
         self.date_format  = date_format
         self.munki_repo_name = munki_repo_name
         self.munki_repo      = munki_repo
+        self.autostage_schedule  = autostage_schedule
      
         # To list (as it is easiest being not dated)
         self.to_list = trelloboard.get_list_name(self.to_list_name)

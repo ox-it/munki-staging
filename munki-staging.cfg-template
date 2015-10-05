@@ -215,3 +215,22 @@
 #munki_repo=retired
 #catalog=retired
 #
+
+#[schedule] 
+# The schedule section specifies when autostaging will happen.
+# By default, this will be every time the script runs.
+# If you add this optional section, autostaging will only happen if
+# the script is running in one of the periods defined.
+# The optional parameters have the format:
+# <Day of Week>=timeperiod[,timeperiod]+
+# where <Day of the week> is the long name of the day of the week in the
+# current locale and time periods are start ``time-end time`` where each
+# time is specified by HH:MM. For example, to only stage on Monday to
+# Thursday between 09:00 and 17:00 you have the section:
+#Monday=09:00-17:00
+#Tuesday=09:00-17:00
+#Wednesday=09:00-17:00
+#Thursday=09:00-17:00
+#
+#[schedule_<catalog>]
+# As above, but schedule on a per-catalog basis

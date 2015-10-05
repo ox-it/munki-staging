@@ -22,6 +22,75 @@ from . import default_settings
 
 import argparse
 
+from datetime import datetime
+
+have_dateutil=0
+try:
+    from dateutil import parser
+    have_dateutil=1
+except ImportError:
+    pass
+
+def _list_cmp(a,b):
+    if a[0] < b[0]:
+        return -1
+
+    if a[0] > b[0]:
+        return 1
+
+    if a[0] == b[0]: # We could be more precise here,
+                     # and sort on [1], but it is not necessary
+       return 0 
+
+class MunkiSchedule:
+
+    # We assume that schedule_list is the result of
+    # RawConfigParser.items(section) i.e. a list of key,value tuples
+
+    def __init__(self, schedule_list):
+       
+        self.periods = {}
+
+        for day,periods in schedule_list:
+
+            # NOTE: Monday == 0, Sunday == 6
+            # (according to parser)
+            dow=parser.parse('%s' % day).weekday()
+            allowed = []
+            for period in periods.split(','):
+                start,end = period.split('-')
+
+                s=parser.parse('%s' % start)
+                e=parser.parse('%s' % end)
+
+                period_start = s.hour * 3600 + s.minute * 60
+                period_end   = e.hour * 3600 + e.minute * 60
+                if period_end < period_start:
+                    raise ValueError('End of period must be later than start of period - are you using the 24 hour clock ?  (start: %s, end %s)' % (period_start, period_end) )
+                if period_end == period_start:
+                    raise ValueError('End of period must be different to start of period (start: %s, end %s)' % (period_start , period_end) )
+         
+                allowed.append( [ period_start, period_end ] )
+
+            self.periods[ dow ] = allowed
+
+    def stage_now(self, now=None, debug=False):
+        if now is None:
+            now = datetime.now()
+        dow = now.weekday()
+
+        if self.periods.has_key(dow):
+            now_int = now.hour * 3600 + now.minute * 60 + now.second
+            for period in self.periods[dow]:
+                if debug:
+                   print '%s %s %s %s' % (period[0], now_int, period[1], now)
+                if period[0] <= now_int and now_int <= period[1]:
+                    return True
+                if now_int < period[0]: # stop working when we can
+                   break 
+
+        return False
+        
 class MunkiStagingConfig(RawConfigParser):
 
     # Note: set allow_no_value=True here as the default
@@ -55,7 +124,7 @@ class MunkiStagingConfig(RawConfigParser):
         if self.read_config_files >= 1:
             return MunkiStagingConfigCatalogs(self)
    
-        print "No configu"
+        print "No configuration file"
         # If we haven't then use the CLI options (or the defaults)
         dev_config  = {}
         test_config = {}
@@ -103,11 +172,17 @@ class MunkiStagingConfig(RawConfigParser):
 
         self.cli_args = self.opts.parse_args()
 
-    def read_config(self):
+    def read_config(self, configfiles=None):
        cfgfiles = default_settings.config_file_locations
        if self.cli_args.config:  
            cfgfiles.append(self.cli_args.config)
 
+       # This allows us to override the config file settings for
+       # things like testing; it should not normally be used
+       if configfiles is not None:
+           self.read_config_files = self.read(configfiles)
+           return
+ 
        self.read_config_files = self.read(cfgfiles)
 
     def get_app_key(self):
@@ -156,10 +231,23 @@ class MunkiStagingConfig(RawConfigParser):
     def get_guid_link_template(self):
        return self._get_option('rssfeeds', 'guid_link_template')
 
-
     def get_description_template(self):
        return self._get_option('rssfeeds', 'get_description_template',
            default_value = 'Software packages in %s catalog')
+
+    def autostage_schedule(self, catalog=None):
+        if have_dateutil == 0:
+            print 'python module dateutil is not installed'
+            print 'it is not possible to control scheduling'
+            return None
+
+        if catalog is None:
+            if self.has_section('schedule'):
+                return MunkiSchedule( self.items('schedule')  )
+        elif self.has_section('schedule_%s' % catalog ):
+            return MunkiSchedule( self.items('schedule_%s' % catalog ) )
+
+        return None
 
 class MunkiStagingConfigCatalogs:
 
