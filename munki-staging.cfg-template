@@ -7,8 +7,8 @@
 # Certian values given here can be overwritten on the command line,
 #
 # The default configuration file locations are:
-#    /etc/munki-trello/munki-trello.cfg 
-#    ./munki-trello.cfg 
+#    /etc/munki-staging/munki-staging.cfg 
+#    ./munki-staging.cfg 
 #
 # You can add an extra config file location by using the --config 
 # command line option. N.B. Configuration files will be processed 

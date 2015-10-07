@@ -58,7 +58,7 @@ testing and production setup above are available on the command line.
 ### Example
 
 ```
-$ python munki-trello.py --boardid 12345 --key myverylongkey --token myevenlongertoken --repo-path /Volumes/my-repo
+$ python munki-staging.py --boardid 12345 --key myverylongkey --token myevenlongertoken --repo-path /Volumes/my-repo
 ```
 
 ### Command line Options
@@ -87,8 +87,8 @@ $ python munki-trello.py --boardid 12345 --key myverylongkey --token myevenlonge
 You can give all of the command line options in a configuration file,
 which will be read first. The default configuration file
 locations are:
-    /etc/munki-trello/munki-trello.cfg
-    ./munki-trello.cfg
+    /etc/munki-staging/munki-staging.cfg
+    ./munki-staging.cfg
 and these will always be checked. You can also add an extra config
 file location by using the --config command line option.
 
@@ -97,7 +97,7 @@ and not all configuration items have a command line equivalent.
 
 Options on the command line will be used in preference to those in the
 configuration file. An example configuration file is in
-munki-trello.cfg-template.
+munki-staging.cfg-template.
 
 The configuration file has several sections:
   * the `[main]` section with some global defaults
