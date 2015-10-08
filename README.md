@@ -271,7 +271,7 @@ munki-staging would then run with the configuration:
 ```
 
 If the two configuration files `/etc/munki-staging/munki-staging.cfg`
-and `./munki-staging.cfg` where present and readable with
+and `./munki-staging.cfg` were present and readable with
 `/etc/munki-staging/munki-staging.cfg` as above and
 `./munki-staging.cfg` containing:
 ```
