@@ -87,6 +87,16 @@ file location by using the --config command line option.
 N.B. Configuration files will be processed *before* command line options,
 and not all configuration items have a command line equivalent.
 
+Configuration files will be read in the order:
+ 0. `/etc/munki-staging/munki-staging.cfg`
+ 0. `./munki-staging.cfg`
+ 0. the configuration file give on the command line
+All configuration files that exist and are readable will be processed; if a
+file is missing or unreadable it will not be processed and will not
+cause an error. Configuration file sections found in multiple sections
+will be folded together, with duplicated settings taking the latest
+value found. Details of the processing are give in the section below.
+
 Options on the command line will be used in preference to those in the
 configuration file. An example configuration file is in
 munki-staging.cfg-template.
@@ -227,6 +237,69 @@ Wednesday=09:00-17:00
 Thursday=09:00-17:00
 
 Note: specifying an empty section will turn off staging.
+
+#### Configuation file processing
+
+As we mentioned in the section introduction, munki-staging will
+attempt to read the configuration files in the following order:
+ 0. `/etc/munki-staging/munki-staging.cfg`
+ 0. `./munki-staging.cfg`
+ 0. the configuration file give on the command line
+
+Files not present, or not readable will be ignored and no error will
+be given in these cases.  If a file is present and readable it will be
+processed, with later configuration adding to (in the case of a
+`[section]`) or replacing (in the case of a `setting=value`) earlier
+ones. 
+
+As an example of configuration file processing, imagine we have the
+configutation file in `/etc/munki-staging/munki-staging.cfg` and no
+other configuration files. The file
+`/etc/munki-staging/munki-staging.cfg`
+contains the line:
+```
+[example_section]
+value_one=1
+value_two=2
+```
+munki-staging would then run with the configuration:
+```
+    example_section.value_one   = 1
+    example_section.value_two   = 1
+```
+
+If the two configuration files `/etc/munki-staging/munki-staging.cfg`
+and `./munki-staging.cfg` where present and readable with
+`/etc/munki-staging/munki-staging.cfg` as above and
+`./munki-staging.cfg` containing:
+```
+[example_section]
+value_three=3
+value_four=4
+```
+munki-staging would then run with the configuration:
+```
+    example_section.value_one   = 1
+    example_section.value_two   = 2
+    example_section.value_three = 3
+    example_section.value_four  = 4
+```
+
+Finally, if there was a configuration file on the command line, say
+`--config extra.cfg`, with the two other files present as above and
+`extra.cfg` containing:
+```
+[example_section]
+value_one=100
+```
+munki-staging would then run with the configuration:
+```
+    example_section.value_one   = 100
+    example_section.value_two   = 2
+    example_section.value_three = 3
+    example_section.value_four  = 4
+```
+
 
 ## Autostaging
 
