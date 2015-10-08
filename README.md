@@ -7,6 +7,7 @@ production, but by default the script will expect 3 Munki Catalogs:
 * development
 * testing
 * production
+
 and this introduction will focus on this example. Taking these
 catalogs as a basis, you would create 5 Trello boards:
 
