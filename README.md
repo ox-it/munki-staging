@@ -88,9 +88,11 @@ N.B. Configuration files will be processed *before* command line options,
 and not all configuration items have a command line equivalent.
 
 Configuration files will be read in the order:
+
  0. `/etc/munki-staging/munki-staging.cfg`
  0. `./munki-staging.cfg`
  0. the configuration file give on the command line
+
 All configuration files that exist and are readable will be processed; if a
 file is missing or unreadable it will not be processed and will not
 cause an error. Configuration file sections found in multiple sections
@@ -199,7 +201,7 @@ There is one required parameter:
 
 These sections allows you to control when autostaging happens.
 
-''NOTE'' You need to install dateutil in order to use this; if you
+__NOTE__ You need to install dateutil in order to use this; if you
 do not install this python module, the schedule section will be
 ignored.
 
