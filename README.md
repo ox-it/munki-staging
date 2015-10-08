@@ -142,8 +142,8 @@ $ sudo easy_install PyRSS2Gen
 You will also need to configure the following; there are no defaults:
 
 *``rssdir``: the directory to publish the RSSFeeds to (one file per catalog, named after the catalog)
-*``rss_link_template``: the link in the RSSFeeds for the item; can use the following templates: `%(name)s', '%(version)s`, `%(catalog)s`
-*``guid_link_template``: a unique link to this version of the package (this will be used by RSS Readers to track the package entry) ; can use the following templates: `%(name)s', '%(version)s`, `%(catalog)s`
+*``rss_link_template``: the link in the RSSFeeds for the item; can use the following templates: `%(name)s`, '%(version)s`, `%(catalog)s`
+*``guid_link_template``: a unique link to this version of the package (this will be used by RSS Readers to track the package entry) ; can use the following templates: `%(name)s`, '%(version)s`, `%(catalog)s`
 *``catalog_link_template``: a link to information about the catalog; can use the following template: `%(catalog)s`
 *``description_template``: the description of the RSS Channel; can use the following template: `%(catalog)s`
 *``icon_url_template``: a link to the Munki icons;  can use the following template: `%(icon_path)s` - the on disk path to the Munki icon
@@ -175,7 +175,6 @@ The full options are:
 
 *``list``: ''Required''. The name of the list in the trello board; when using dated lists this is also the suffix used after the date.
 *``to_list``: The name of the list in trello in which to put packages to be migrated into this catalog; defaults to 'To <list>'.
-is as 
 *``catalog``: ''Required''. The name of the Munki catalog that this list is used for.
 *``stage_days``: Default: unset. The number of days that a package remains in this catalog before being autostaged/promoted to the stage_to catalog.  Note: autostaging must be enabled in order for package staging to occur.
 *``stage_to``: The name of the munki repository/config section to
@@ -231,13 +230,13 @@ where <Day of the week> is the long name of the day of the week in the
 current locale and time periods are start ``time-end time`` where each
 time is specified by HH:MM. For example, to only stage on Monday to Thursday
 between 09:00 and 17:00 you have the section:
-
+```
 [schedule]
 Monday=09:00-17:00
 Tuesday=09:00-17:00
 Wednesday=09:00-17:00
 Thursday=09:00-17:00
-
+```
 Note: specifying an empty section will turn off staging.
 
 #### Configuration file processing
