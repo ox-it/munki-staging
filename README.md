@@ -73,7 +73,7 @@ $ python munki-staging.py --boardid 12345 --key myverylongkey --token myevenlong
 * ``--prod-list``: Optional. The name of your 'Production' list. Defaults to ``Production``; only used when ``--prod-suffix`` is unset.
 * ``--repo-path``: Optional. The path to your Munki repository. Defaults to ``/Volumes/Munki``.
 * ``--makecatalogs``: Optional. The path to ``makecatalogs``. Defaults to ``/usr/local/munki/makecatalogs``.
-* ``--date-format``: Optional. The date format to use when creating dated lists. See strftime(1) for details of the formating options.  Defaults to ``%d/%m/%y``.
+* ``--date-format``: Optional. The date format to use when creating dated lists. See strftime(1) for details of the formatting options.  Defaults to ``%d/%m/%y``.
 
 ## Configuration file
 
@@ -113,7 +113,7 @@ The configuration file has several sections:
 
 #### The `[main]` section
 
-The main section contains global configuration items; the data aboud
+The main section contains global configuration items; the data about
 the Trello board, the path to makecatalogs and the date_format to be
 used.
 
@@ -146,15 +146,14 @@ You will also need to configure the following; there are no defaults:
 *``guid_link_template``: a unique link to this version of the package (this will be used by RSS Readers to track the package entry) ; can use the following templates: `%(name)s', '%(version)s`, `%(catalog)s`
 *``catalog_link_template``: a link to information about the catalog; can use the following template: `%(catalog)s`
 *``description_template``: the description of the RSS Channel; can use the following template: `%(catalog)s`
-*``icon_url_template``: a link to the Munki icons;  can use the follo
-wing template: `%(icon_path)s` - the on disk path to the Munki icon
+*``icon_url_template``: a link to the Munki icons;  can use the following template: `%(icon_path)s` - the on disk path to the Munki icon
 
 
 As an example, a complete RSS Feed configuration is:
 
 ```
 [rssfeeds]
-rssdir=/srv/www/site.orchardox.ac.uk/htdocs/rssfeeds
+rssdir=/srv/www/site.orchard.ox.ac.uk/htdocs/rssfeeds
 rss_link_template=https://site.orchard.ox.ac.uk/packages/%(name)s
 guid_link_template=https://site.orchard.ox.ac.uk/packages/%(name)s/%(version)s
 catalog_link_template=https://site.orchard.ox.ac.uk/catalogs/%(catalog)s
@@ -170,7 +169,7 @@ configuration of autostaging, and the setting of due dates.
 
 The name in the section title is not used, but it is suggested that
 this follow the name of the Munki catalog, as this will aid
-readability of the configuaration file.
+readability of the configuration file.
 
 The full options are:
 
@@ -210,14 +209,14 @@ Clearly, if you have not configured autostaging, then these sections will
 have no effect.
 
 If autostaging is configured, by default, staging will happen every
-time the script is run, if packages meet the critera to be staged.
+time the script is run, if packages meet the criteria to be staged.
 
 If you add the optional section `[schedule]`, then autostaging will only
 happen if the script is running in one of the periods defined.
 
 If you add the optional section `[schedule_<name>]`, then autostaging 
 for the catalog `<name> will only happen if the script is running in
-one of the periods defined in thie section.
+one of the periods defined in this section.
 
 Note: if you define both `[schedule]` and `[schedule_<name>]`, the
 global section takes precedence: staging will only happen if you are
@@ -241,7 +240,7 @@ Thursday=09:00-17:00
 
 Note: specifying an empty section will turn off staging.
 
-#### Configuation file processing
+#### Configuration file processing
 
 As we mentioned in the section introduction, munki-staging will
 attempt to read the configuration files in the following order:
@@ -256,7 +255,7 @@ processed, with later configuration adding to (in the case of a
 ones. 
 
 As an example of configuration file processing, imagine we have the
-configutation file in `/etc/munki-staging/munki-staging.cfg` and no
+configuration file in `/etc/munki-staging/munki-staging.cfg` and no
 other configuration files. The file
 `/etc/munki-staging/munki-staging.cfg`
 contains the line:
