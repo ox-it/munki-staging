@@ -7,6 +7,7 @@ production, but by default the script will expect 3 Munki Catalogs:
 * development
 * testing
 * production
+
 and this introduction will focus on this example. Taking these
 catalogs as a basis, you would create 5 Trello boards:
 
@@ -72,7 +73,7 @@ $ python munki-staging.py --boardid 12345 --key myverylongkey --token myevenlong
 * ``--prod-list``: Optional. The name of your 'Production' list. Defaults to ``Production``; only used when ``--prod-suffix`` is unset.
 * ``--repo-path``: Optional. The path to your Munki repository. Defaults to ``/Volumes/Munki``.
 * ``--makecatalogs``: Optional. The path to ``makecatalogs``. Defaults to ``/usr/local/munki/makecatalogs``.
-* ``--date-format``: Optional. The date format to use when creating dated lists. See strftime(1) for details of the formating options.  Defaults to ``%d/%m/%y``.
+* ``--date-format``: Optional. The date format to use when creating dated lists. See strftime(1) for details of the formatting options.  Defaults to ``%d/%m/%y``.
 
 ## Configuration file
 
@@ -87,6 +88,18 @@ file location by using the --config command line option.
 N.B. Configuration files will be processed *before* command line options,
 and not all configuration items have a command line equivalent.
 
+Configuration files will be read in the order:
+
+ 0. `/etc/munki-staging/munki-staging.cfg`
+ 0. `./munki-staging.cfg`
+ 0. the configuration file give on the command line
+
+All configuration files that exist and are readable will be processed; if a
+file is missing or unreadable it will not be processed and will not
+cause an error. Configuration file sections found in multiple sections
+will be folded together, with duplicated settings taking the latest
+value found. Details of the processing are give in the section below.
+
 Options on the command line will be used in preference to those in the
 configuration file. An example configuration file is in
 munki-staging.cfg-template.
@@ -100,7 +113,7 @@ The configuration file has several sections:
 
 #### The `[main]` section
 
-The main section contains global configuration items; the data aboud
+The main section contains global configuration items; the data about
 the Trello board, the path to makecatalogs and the date_format to be
 used.
 
@@ -133,15 +146,14 @@ You will also need to configure the following; there are no defaults:
 *``guid_link_template``: a unique link to this version of the package (this will be used by RSS Readers to track the package entry) ; can use the following templates: `%(name)s', '%(version)s`, `%(catalog)s`
 *``catalog_link_template``: a link to information about the catalog; can use the following template: `%(catalog)s`
 *``description_template``: the description of the RSS Channel; can use the following template: `%(catalog)s`
-*``icon_url_template``: a link to the Munki icons;  can use the follo
-wing template: `%(icon_path)s` - the on disk path to the Munki icon
+*``icon_url_template``: a link to the Munki icons;  can use the following template: `%(icon_path)s` - the on disk path to the Munki icon
 
 
 As an example, a complete RSS Feed configuration is:
 
 ```
 [rssfeeds]
-rssdir=/srv/www/site.orchardox.ac.uk/htdocs/rssfeeds
+rssdir=/srv/www/site.orchard.ox.ac.uk/htdocs/rssfeeds
 rss_link_template=https://site.orchard.ox.ac.uk/packages/%(name)s
 guid_link_template=https://site.orchard.ox.ac.uk/packages/%(name)s/%(version)s
 catalog_link_template=https://site.orchard.ox.ac.uk/catalogs/%(catalog)s
@@ -157,7 +169,7 @@ configuration of autostaging, and the setting of due dates.
 
 The name in the section title is not used, but it is suggested that
 this follow the name of the Munki catalog, as this will aid
-readability of the configuaration file.
+readability of the configuration file.
 
 The full options are:
 
@@ -189,7 +201,7 @@ There is one required parameter:
 
 These sections allows you to control when autostaging happens.
 
-''NOTE'' You need to install dateutil in order to use this; if you
+__NOTE__ You need to install dateutil in order to use this; if you
 do not install this python module, the schedule section will be
 ignored.
 
@@ -197,14 +209,14 @@ Clearly, if you have not configured autostaging, then these sections will
 have no effect.
 
 If autostaging is configured, by default, staging will happen every
-time the script is run, if packages meet the critera to be staged.
+time the script is run, if packages meet the criteria to be staged.
 
 If you add the optional section `[schedule]`, then autostaging will only
 happen if the script is running in one of the periods defined.
 
 If you add the optional section `[schedule_<name>]`, then autostaging 
 for the catalog `<name> will only happen if the script is running in
-one of the periods defined in thie section.
+one of the periods defined in this section.
 
 Note: if you define both `[schedule]` and `[schedule_<name>]`, the
 global section takes precedence: staging will only happen if you are
@@ -227,6 +239,69 @@ Wednesday=09:00-17:00
 Thursday=09:00-17:00
 
 Note: specifying an empty section will turn off staging.
+
+#### Configuration file processing
+
+As we mentioned in the section introduction, munki-staging will
+attempt to read the configuration files in the following order:
+ 0. `/etc/munki-staging/munki-staging.cfg`
+ 0. `./munki-staging.cfg`
+ 0. the configuration file give on the command line
+
+Files not present, or not readable will be ignored and no error will
+be given in these cases.  If a file is present and readable it will be
+processed, with later configuration adding to (in the case of a
+`[section]`) or replacing (in the case of a `setting=value`) earlier
+ones. 
+
+As an example of configuration file processing, imagine we have the
+configuration file in `/etc/munki-staging/munki-staging.cfg` and no
+other configuration files. The file
+`/etc/munki-staging/munki-staging.cfg`
+contains the line:
+```
+[example_section]
+value_one=1
+value_two=2
+```
+munki-staging would then run with the configuration:
+```
+    example_section.value_one   = 1
+    example_section.value_two   = 1
+```
+
+If the two configuration files `/etc/munki-staging/munki-staging.cfg`
+and `./munki-staging.cfg` were present and readable with
+`/etc/munki-staging/munki-staging.cfg` as above and
+`./munki-staging.cfg` containing:
+```
+[example_section]
+value_three=3
+value_four=4
+```
+munki-staging would then run with the configuration:
+```
+    example_section.value_one   = 1
+    example_section.value_two   = 2
+    example_section.value_three = 3
+    example_section.value_four  = 4
+```
+
+Finally, if there was a configuration file on the command line, say
+`--config extra.cfg`, with the two other files present as above and
+`extra.cfg` containing:
+```
+[example_section]
+value_one=100
+```
+munki-staging would then run with the configuration:
+```
+    example_section.value_one   = 100
+    example_section.value_two   = 2
+    example_section.value_three = 3
+    example_section.value_four  = 4
+```
+
 
 ## Autostaging
 
