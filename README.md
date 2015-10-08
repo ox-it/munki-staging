@@ -141,12 +141,12 @@ $ sudo easy_install PyRSS2Gen
 ```
 You will also need to configure the following; there are no defaults:
 
-*``rssdir``: the directory to publish the RSSFeeds to (one file per catalog, named after the catalog)
-*``rss_link_template``: the link in the RSSFeeds for the item; can use the following templates: `%(name)s`, '%(version)s`, `%(catalog)s`
-*``guid_link_template``: a unique link to this version of the package (this will be used by RSS Readers to track the package entry) ; can use the following templates: `%(name)s`, '%(version)s`, `%(catalog)s`
-*``catalog_link_template``: a link to information about the catalog; can use the following template: `%(catalog)s`
-*``description_template``: the description of the RSS Channel; can use the following template: `%(catalog)s`
-*``icon_url_template``: a link to the Munki icons;  can use the following template: `%(icon_path)s` - the on disk path to the Munki icon
+* ``rssdir``: the directory to publish the RSSFeeds to (one file per catalog, named after the catalog)
+* ``rss_link_template``: the link in the RSSFeeds for the item; can use the following templates: `%(name)s`, `%(version)s`, `%(catalog)s`
+* ``guid_link_template``: a unique link to this version of the package (this will be used by RSS Readers to track the package entry) ; can use the following templates: `%(name)s`, `%(version)s`, `%(catalog)s`
+* ``catalog_link_template``: a link to information about the catalog; can use the following template: `%(catalog)s`
+* ``description_template``: the description of the RSS Channel; can use the following template: `%(catalog)s`
+* ``icon_url_template``: a link to the Munki icons;  can use the following template: `%(icon_path)s` - the on disk path to the Munki icon
 
 
 As an example, a complete RSS Feed configuration is:
@@ -173,15 +173,14 @@ readability of the configuration file.
 
 The full options are:
 
-*``list``: ''Required''. The name of the list in the trello board; when using dated lists this is also the suffix used after the date.
-*``to_list``: The name of the list in trello in which to put packages to be migrated into this catalog; defaults to 'To <list>'.
-*``catalog``: ''Required''. The name of the Munki catalog that this list is used for.
-*``stage_days``: Default: unset. The number of days that a package remains in this catalog before being autostaged/promoted to the stage_to catalog.  Note: autostaging must be enabled in order for package staging to occur.
-*``stage_to``: The name of the munki repository/config section to
-stage packages to (if auto staging).
-*``autostage``: Default: 0 (off). Whether or not to automatically promote packages based on the Trello card due date.
-*``munki_repo``: The name of the underlying Munki repository (if using more than one Munki repository.
-*``dated_lists``: Default: 0 (off). If new Trello lists are created when packages are moved into this catalog, based on the date the packages are moved.
+* ``list``: ''Required''. The name of the list in the trello board; when using dated lists this is also the suffix used after the date.
+* ``to_list``: The name of the list in trello in which to put packages to be migrated into this catalog; defaults to 'To <list>'.
+* ``catalog``: ''Required''. The name of the Munki catalog that this list is used for.
+* ``stage_days``: Default: unset. The number of days that a package remains in this catalog before being autostaged/promoted to the stage_to catalog.  Note: autostaging must be enabled in order for package staging to occur.
+* ``stage_to``: The name of the munki repository/config section to stage packages to (if auto staging).
+* ``autostage``: Default: 0 (off). Whether or not to automatically promote packages based on the Trello card due date.
+* ``munki_repo``: The name of the underlying Munki repository (if using more than one Munki repository.
+* ``dated_lists``: Default: 0 (off). If new Trello lists are created when packages are moved into this catalog, based on the date the packages are moved.
 
 #### The Munki repository sections `[munki_catalog_<name>]`
 
@@ -194,7 +193,7 @@ which could be on slower storage.
 
 There is one required parameter:
 
-*``repo_path``: The path to the Munki repository
+* ``repo_path``: The path to the Munki repository
 
 #### Auto stating schedule sections (`[schedule]`) and/or `[schedule_<name>]`)
 
