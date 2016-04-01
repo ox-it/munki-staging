@@ -126,7 +126,19 @@ The full options are:
 * ``date-format``: The date format to use when creating dated lists. See strftime(1) for details of the formatting options (note that the script assumes use of numeric options only).  Defaults to ``%d/%m/%y``.
 
 Note that the script requires that `boardid`, `key` and `token are set
-either in the configuration file or on the command line.
+either in the configuration file or on the command line. These values
+shoudl be the unquoted tokens from trello; if there are quotes present
+at the start and end of these three options they will be stripped. 
+
+As an example, a minimal main configuration is below; N.B. the values
+have been randomly generated, so are **NOT** valid for trello.
+
+```
+[main]
+boardid=ua6oor0oL
+key=cf3e10a51fd05ef4a1944c7ccd713aa6
+token=6b8a8177589e02994c5183a881b6c91f6709f6dcc6711591c05eb3def190e04e
+```
 
 #### The `[rssfeeds]` section
 

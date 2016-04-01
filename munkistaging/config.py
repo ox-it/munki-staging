@@ -185,14 +185,23 @@ class MunkiStagingConfig(RawConfigParser):
  
        self.read_config_files = self.read(cfgfiles)
 
+    # Strips quotes form the begining and end of option values
+    # mainly to ensure that these are not present on the key, token
+    # and boardids
+    def _get_unquoted_option(self, section, key):
+        value = self._get_option(section, key)
+        value = re.sub('^(\'|")', '', value)
+        value = re.sub('(\'|")$', '', value)
+        return value
+
     def get_app_key(self):
-        return self._get_option('main', 'key')
+        return self._get_unquoted_option('main', 'key')
 
     def get_app_token(self):
-        return self._get_option('main', 'token')
+        return self._get_unquoted_option('main', 'token')
 
     def get_boardid(self):
-        return self._get_option('main', 'boardid')
+        return self._get_unquoted_option('main', 'boardid')
 
     def get_date_format(self):
         return self._get_option('main', 'date_format')
