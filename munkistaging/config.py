@@ -113,7 +113,7 @@ class MunkiStagingConfig(RawConfigParser):
         repo_path = self._get_option('main', 'repo_path',
                           default_value=default_settings.repo_path)
 
-        return { 'repo_name': 'production', 'repo_path': repo_path }
+        return [  { 'repo_name': 'production', 'repo_path': repo_path } ]
 
     def add_munki_repo(self, repo):
         self.repositories[repo.name] = repo
@@ -183,7 +183,8 @@ class MunkiStagingConfig(RawConfigParser):
            self.read_config_files = self.read(configfiles)
            return
  
-       self.read_config_files = self.read(cfgfiles)
+       read_cfg_files = self.read(cfgfiles)
+       self.read_config_files = len(read_cfg_files)
 
     # Strips quotes form the begining and end of option values
     # mainly to ensure that these are not present on the key, token

@@ -52,6 +52,11 @@ In order to get the maximum flexibility from the script, you will need
 to use a configuration file; however most options for the development,
 testing and production setup above are available on the command line.
 
+Note that if you use a configuration file you will need to specify
+a Munki repository section; this is because using the configuration file
+allows more than one repository to be used, overriding the default
+option from the command line.
+
 ### Example
 
 ```
@@ -107,9 +112,17 @@ munki-staging.cfg-template.
 The configuration file has several sections:
   * the `[main]` section with some global defaults
   * the optional `[rssfeeds]` section 
-  * Munki repository sections (`[munk_repo_<name>]`)
+  * Munki repository sections (`[munki_repo_<name>]`)
   * Munki catalog sections (`[munki_catalog_<name>]`)
-  * Auto stating schedule sections (`[schedule]` and/or `[schedule_<name>]`)
+  * Auto staging schedule sections (`[schedule]` and/or `[schedule_<name>]`)
+
+Note that if you use a configuration file you must provide at least
+the sections:
+  * main
+  * a Munki repository
+(any number of munki repositories can be used, but there must be at
+least one given as using the configuration file removes the default
+value for this setting)
 
 #### The `[main]` section
 
