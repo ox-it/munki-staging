@@ -89,7 +89,13 @@ class MunkiTrelloBoard:
             if self.list_id_catalog.has_key(listid):
                 trello_catalog = self.list_id_catalog[ card['idList'] ]
             else:
-                print "XXX card %s not in recognised list\n" % card['name']
+                try: 
+                    listname = self.trello_id_list[listid]['name']
+                except KeyError:
+                    listname = '(unknown)'
+
+                print "\tIgnoring card '%s' in unrecognised list '%s'" \
+                       % ( card['name'], listname )
                 continue
 
             try:
