@@ -42,14 +42,22 @@ config.read_config()
 packagelist = PackageList()
 
 makecatalogs = config.get_makecatalogs()
+repo_count = 0
 for mrepo_cfg in config.configured_munki_repositories():
     munki_repo = MunkiRepository(mrepo_cfg, makecatalogs)
     print "Finding packages in repository", munki_repo.name, "..."
+    repo_count = repo_count + 1
     for package in munki_repo.packages():
         packagelist.add_or_update_package(package)
 
     # Remember for future use
     config.add_munki_repo( munki_repo )
+
+if repo_count == 0:
+    print "No munki repositories configured"
+    print "  if you are using a configuration file you must specify at least"
+    print "  one munki_repo_<name> section"
+    sys.exit(1)
 
 print "Building Trello board data .... "
 munki_trello = MunkiTrelloBoard(config)
