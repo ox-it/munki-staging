@@ -89,7 +89,13 @@ class MunkiTrelloBoard:
             if self.list_id_catalog.has_key(listid):
                 trello_catalog = self.list_id_catalog[ card['idList'] ]
             else:
-                print "XXX card %s not in recognised list\n" % card['name']
+                try: 
+                    listname = self.trello_id_list[listid]['name']
+                except KeyError:
+                    listname = '(unknown)'
+
+                print "\tIgnoring card '%s' in unrecognised list '%s'" \
+                       % ( card['name'], listname )
                 continue
 
             try:
@@ -277,6 +283,28 @@ class MunkiTrelloBoard:
         cardid = package.trello_card_id
         self.trello.cards.delete( cardid ) 
 
+    def print_catalog_lists(self):
+        if self.catalog_lists is None:
+            print '(Catalog lists not set up)'
+            return
+
+        for c in self.catalog_lists.keys():
+            print '\tUsing Catalog:  %s' % c
+            self.catalog_lists[c].print_catalog() 
+        return
+
+
+    def check_list_setup(self):
+        # Check that things are good to go: there must be at least
+        # one valid trello list, otherwise things will not really work
+
+        if self.catalog_lists is None:
+            return (False, 'Catalog lists not set up')
+
+        if len(self.catalog_lists) == 0:
+            return (False, 'Catalog lists not found')
+   
+        return (True, '')
 
 class MunkiTrelloBoardCatalogList:
     
@@ -391,3 +419,8 @@ class MunkiTrelloBoardCatalogList:
              return self.stage_from
 
          raise ValueError('Cannot find catalog %s to stage from' % self.stage_from_name)
+
+    def print_catalog(self):
+        print '\t\tTrello list %s' % self.list_name
+        print '\t\tTrello to list %s' % self.to_list_name
+        print '\t\tRelated Munki repository %s (path: %s) ' % (self.munki_repo_name, self.munki_repo.munki_path)
