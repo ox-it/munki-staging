@@ -113,18 +113,30 @@ class MunkiStagingConfig(RawConfigParser):
         repo_path = self._get_option('main', 'repo_path',
                           default_value=default_settings.repo_path)
 
-        return { 'repo_name': 'production', 'repo_path': repo_path }
+        return [  { 'repo_name': 'production', 'repo_path': repo_path } ]
 
     def add_munki_repo(self, repo):
         self.repositories[repo.name] = repo
 
     def munki_catalogs(self):
-        # If we have read a config file, then use it and 
-        # don't allow any other overrides in for the catalogs
-        if self.read_config_files >= 1:
+        # If we have read a config file, and it has sections
+        # defined, use it in preferece to the defaults
+        
+        configcatalogs = MunkiStagingConfigCatalogs(self)
+        if self.read_config_files >= 1 and len(configcatalogs) > 0 :
             return MunkiStagingConfigCatalogs(self)
    
-        print "No configuration file"
+        print "No configuration file ... using defaults"
+        # Find the first repo: if we have got this far, we assume that
+        # there is only 1 repository ...
+        munki_repositories = self.configured_munki_repositories()
+        # munki_repositories can be an iterator or a list
+        try:
+            munki_repo = munki_repositories.next()
+        except AttributeError:
+            munki_repo = munki_repositories[0]
+       
+  
         # If we haven't then use the CLI options (or the defaults)
         dev_config  = {}
         test_config = {}
@@ -134,19 +146,25 @@ class MunkiStagingConfig(RawConfigParser):
         dev_config['list']         = self.cli_args.dev_list
         dev_config['to_list']      = self.cli_args.to_dev_list
         dev_config['catalog']      = self.cli_args.dev_catalog
-        dev_config['stage_days']   = self.cli_args.dev_stage_days
+        dev_config['munki_repo']   = munki_repo['repo_name']
+        if self.cli_args.dev_stage_days is not None:
+            dev_config['stage_days']   = self.cli_args.dev_stage_days
 
-        print dev_config
-        test_config['list']        = self.cli_args.test_list
-        test_config['to_list']     = self.cli_args.to_test_list
-        test_config['catalog']     = self.cli_args.test_catalog
-        test_config['stage_days']  = self.cli_args.test_stage_days
+        test_config['section_name'] = 'testing'
+        test_config['list']         = self.cli_args.test_list
+        test_config['to_list']      = self.cli_args.to_test_list
+        test_config['catalog']      = self.cli_args.test_catalog
+        test_config['munki_repo']   = munki_repo['repo_name']
+        if self.cli_args.test_stage_days is not None:
+            test_config['stage_days']  = self.cli_args.test_stage_days
         test_config['autostage']   = self.cli_args.stage_test
 
-        prod_config['list']        = self.cli_args.prod_list
-        prod_config['to_list']     = self.cli_args.to_prod_list
-        prod_config['catalog']     = self.cli_args.prod_catalog
-        prod_config['autostage']   = self.cli_args.stage_prod
+        prod_config['section_name'] = 'production'
+        prod_config['list']         = self.cli_args.prod_list
+        prod_config['to_list']      = self.cli_args.to_prod_list
+        prod_config['catalog']      = self.cli_args.prod_catalog
+        prod_config['autostage']    = self.cli_args.stage_prod
+        prod_config['munki_repo']   = munki_repo['repo_name']
 
         if self.cli_args.suffix:
             prod_config['list']        = self.cli_args.suffix
@@ -163,6 +181,11 @@ class MunkiStagingConfig(RawConfigParser):
     def cli_parse(self):
 
         self.opts = argparse.ArgumentParser(description='Stage packages in Munki based on a trello board')
+
+        # showconfig is a true/false thing:
+        self.opts.add_argument('--showconfig', dest='showconfig',
+                               action='store_true',
+                               help='Display configuration and stop are parseing of arguments and contacting trello')
 
         for tuple in default_settings.cli_options:
             arg = tuple[0]
@@ -183,16 +206,35 @@ class MunkiStagingConfig(RawConfigParser):
            self.read_config_files = self.read(configfiles)
            return
  
-       self.read_config_files = self.read(cfgfiles)
+       read_cfg_files = self.read(cfgfiles)
+       self.read_config_files = len(read_cfg_files)
+
+    # Strips quotes form the begining and end of option values
+    # mainly to ensure that these are not present on the key, token
+    # and boardids
+    def _get_unquoted_option(self, section, key):
+        value = self._get_option(section, key)
+        value = re.sub('^(\'|")', '', value)
+        value = re.sub('(\'|")$', '', value)
+        return value
+
+    def get_show_config(self):
+        # As this is cannot be set in the config file 
+        # (which might be a bug):
+        rv = False
+        if self.cli_args.__contains__('showconfig'):
+            rv = self.cli_args.__getattribute__('showconfig')
+
+        return rv
 
     def get_app_key(self):
-        return self._get_option('main', 'key')
+        return self._get_unquoted_option('main', 'key')
 
     def get_app_token(self):
-        return self._get_option('main', 'token')
+        return self._get_unquoted_option('main', 'token')
 
     def get_boardid(self):
-        return self._get_option('main', 'boardid')
+        return self._get_unquoted_option('main', 'boardid')
 
     def get_date_format(self):
         return self._get_option('main', 'date_format')
@@ -249,12 +291,29 @@ class MunkiStagingConfig(RawConfigParser):
 
         return None
 
+    def print_expected_trello(self):
+        print
+        print 'The current configuration expects a Trello board with the'
+        print 'following lists: '
+        print
+        for munki_cat in self.munki_catalogs():
+            catname = munki_cat['catalog']
+
+            list    = munki_cat['list']
+            to_list = munki_cat['to_list']
+      
+            print '\tFor Munki catalog %s' % catname
+            print '\t\tTo list     : %s' % to_list
+            print '\t\tPackage list: %s' % list
+           
+
 class MunkiStagingConfigCatalogs:
 
     catalog_re = re.compile('munki_catalog_(\w+)')
 
     def __init__(self, munki_staging_config):
-        self.config = munki_staging_config
+        self.config   = munki_staging_config
+        self.len      = None
         self.sections = munki_staging_config.sections()
     
     def __iter__(self):
@@ -275,6 +334,16 @@ class MunkiStagingConfigCatalogs:
 
         raise StopIteration() 
 
+
+    def __len__(self):
+        if self.len is None:
+            self.len = 0
+            for section in self.config.sections():
+                if self.catalog_re.match(section):
+                   self.len = self.len + 1
+
+        return self.len
+   
 # Um ... this is basically the same as the above; do we need it ?
 class MunkiStagingRepositories:
 
