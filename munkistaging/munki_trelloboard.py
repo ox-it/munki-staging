@@ -161,7 +161,6 @@ class MunkiTrelloBoard:
         if self.catalog_lists is None:
             self.setup_catalog_lists()
 
-        print self.catalog_lists.keys()
         return self.catalog_lists[catalog_list]
 
     def setup_catalog(self, config_dict, date_format):
