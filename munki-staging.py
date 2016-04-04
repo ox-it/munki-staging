@@ -66,11 +66,13 @@ print "Building Munki repository data and packages .... "
 # Build the catalog lists
 # (to allow us to only consisder cards in the relevant lists)
 munki_trello.setup_catalog_lists()
-# XXX(aaron): calling this here is probably a bug, as it shouldn't need to
-#             be here other things should call this before they need it;
-#             this was on line 66, but again, I'm not sure if it needed to
-#             be there, as it should be called by the time it
-#             gets there.
+
+(check, reason) = munki_trello.check_list_setup()
+if check == False:
+    print 
+    print 'Error: Incorrect Trello setup detected: %s ' % reason
+    config.print_expected_trello()
+    sys.exit(1)
 
 print "Building Package list from Trello .... "
 for package in munki_trello.packages():
@@ -80,6 +82,12 @@ for package in munki_trello.packages():
        print "Deleting card without a package %s " % package.key()
        munki_trello.delete_package(package)
 
+
+if config.get_show_config():
+    munki_trello.print_catalog_lists()
+    print "\n Terminating run - no processing performed"
+    sys.exit(0)
+
 # At this point, we want to
 #   * find any packages missing a trello card a create the card
 #   * move packages in the 'To' trello lists into the correct catalog
@@ -88,7 +96,6 @@ for package in munki_trello.packages():
 #
 
 print "Finding missing packages .... "
-
 
 # Find packages not in the trello boards
 # N.B. Will add packages according to underlying munki catalog
