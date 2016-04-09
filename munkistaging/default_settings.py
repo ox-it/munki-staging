@@ -56,7 +56,7 @@ cli_options = [
 
 # Dev Catalog/Trello
 
-    ( "--to-dev-list", "Name of the 'To Development' Trello list if none in the configuration file. Defaults to '%s'. " % DEFAULT_DEV_LIST, DEFAULT_DEV_LIST),
+    ( "--to-dev-list", "Name of the 'To Development' Trello list if none in the configuration file. Defaults to '%s'. " % DEFAULT_TO_DEV_LIST, DEFAULT_TO_DEV_LIST),
     ( "--dev-list", "Name of the 'Development' Trello list. Defaults to '%s'. " % DEFAULT_DEV_LIST, DEFAULT_DEV_LIST),
     ("--dev-catalog", "Name of the Munki development catalog. Defaults to '%s'. " % DEFAULT_MUNKI_DEV_CATALOG, DEFAULT_MUNKI_DEV_CATALOG),
     ("--dev-stage-days", "The number of days that a package will remain in development before being prompoted to test (if staging is enabled).  Note: this does not enable staging", None),
