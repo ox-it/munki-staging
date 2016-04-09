@@ -219,6 +219,20 @@ class Package:
        # Set the due date (if autostaging is on)
        self.set_trello_due_date()
 
+       # Check to see if we need to move the package to a different
+       # repository
+       migrate_packages = 1
+       if self.munki_repo is None:
+           print "ERROR: package %s does not have a munki repository" % self
+           migrate_packages = 0
+
+       if self.trello_catalog.munki_repo is None:
+           print "ERROR: trello catalog %s does not have a munki repository" % self.trello_catalog.list_name
+           migrate_packages = 0
+
+       if migrate_packages == 0:
+           raise ValueError('Missing munki repository before migration check for package %s' % self) 
+
        if self.munki_repo.name != self.trello_catalog.munki_repo.name:
            self.migrate_package()
 
