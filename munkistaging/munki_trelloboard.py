@@ -183,9 +183,10 @@ class MunkiTrelloBoard:
          if munki_repo_name is not None:
             if self.config.repositories.has_key(munki_repo_name):
                munki_repo = self.config.repositories[munki_repo_name]
-
-         if munki_repo is None:
-             print "ERROR: Could not assign munki repo name %s to trello catalog %s (full list of repositories: %s) " % (munki_repo_name, list_name, self.config.repositories.keys())
+            else:
+               raise ValueError('Could not find munki repository %s in defined list of repositories %s'  % (munki_repo_name, self.config.repositories.keys()))
+         else:
+            raise ValueError('No munki repository name give for list' %  list_name)
 
          autostage_schedule = \
              self.config.autostage_schedule( config_dict['section_name'] )
