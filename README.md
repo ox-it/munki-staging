@@ -194,7 +194,6 @@ description_template='Software packages in Orchard %(catalog)s catalog'
 icon_url_template=https://site.orchard.ox.ac.uk/munki/%(icon_path)s
 ```
 
-
 #### The Munki catalog sections `[munki_catalog_<name>]`
 
 The Munki catalog sections contain information about different Munki
@@ -215,6 +214,10 @@ The full options are:
 * ``autostage``: Default: 0 (off). Whether or not to automatically promote packages based on the Trello card due date.
 * ``munki_repo``: The name of the underlying Munki repository (if using more than one Munki repository.
 * ``dated_lists``: Default: 0 (off). If new Trello lists are created when packages are moved into this catalog, based on the date the packages are moved.
+
+Note that the ``stage_days`` parameter can be overridden in individual
+``pkgsinfo`` files on a per-package basis; see the section on
+autostaging for more details.
 
 #### The Munki repository sections `[munki_catalog_<name>]`
 
@@ -355,6 +358,59 @@ Thus if you have 3 catalogs:
 then in order to stage packages into production you need to turn on
 auto staging for testing. In order to stage packages into testing, you
 need to turn on autostaging for development.
+
+### Staging Speed
+
+If you use autostaging, you will need to set the number of days in
+which a package get staged. This is set on the Munki catalog using the
+``stage_days`` setting for all packages in a catalog. However, there
+may be some packages that you wish to stage faster than the default
+(e.g. a security release).
+
+For this reason, there is a feature to allow you to change the staging
+days on a per-package basis. To do this you will need to edit the
+``pkgsinfo`` file for the package, adding a munki_staging key which
+has a dictoinary value. Within this dictionary you can set a
+stage_days parameter which overrides the default number of days.
+
+For example, to stage a package with 1 days worth of testing you would
+add the following to the pkginfo file:
+```
+       <key>munki_staging</key>
+       <dict>
+               <key>stage_days</key>
+               <string>1</string>
+       </dict>
+
+```
+This would then override the setting for the catalog, if autostaging
+is enabled.
+
+In order to help with this, there is a python script that you can use
+to set the number of staging days for a package; this script
+``munkistaging-pkgsinfo.py`` can be run as below to set the staging
+days to be 1 (as in the above pkgsinfo file):
+```
+$ python munkistaging-pkgsinfo.py --stagedays 1 /path/to/pkgsinfo/file
+```
+The full usage is:
+```
+$ munkistaging-pkgsinfo.py [--stagedays <n>] <pkgsinfo_file>+
+```
+where 
+* ``--stagedays``:  optional; the number of days to stage 
+* ``<pkgsinfo_file>``: is a path to a pkgsinfo file
+
+If run without an argment will report on the number of staging days
+that are configured within each of the pkgsinfo files listed.
+
+*NB* The munki staging configuration file is *not* read by this helper
+file.
+
+
+### Command line Options
+
+* ``--boardid``: Required. The ID of your Trello board.
 
 # Troubleshooting
 
