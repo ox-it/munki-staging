@@ -24,16 +24,24 @@ options = argparse.ArgumentParser(description='Configure the optional munki_stag
 
 options.add_argument('--stagedays', help='number of days to stage a package by', default=None, type=int)
 
+options.add_argument('--removestagedays', help='remove the override of the number of days to stage a package by', action='store_true' )
+
 options.add_argument('pkgsinfo', help='pkgsinfo files to operate on',
  nargs='+')
 
 args = options.parse_args()
+
 
 stagedays = -1
 if args.__contains__('stagedays') and args.stagedays is not None:
     stagedays = args.stagedays
     if stagedays < 0:
         print "Can only set stagedays to be a positive integer"
+        sys.exit(1)
+
+if args.removestagedays == True:
+    if stagedays >= 0:
+        print "Cannot both set (stagedays >=0) and remove stagedays"
         sys.exit(1)
 
 for file in args.pkgsinfo:
@@ -50,6 +58,12 @@ for file in args.pkgsinfo:
     days = '(unset)'
     if munkistaging.has_key('stage_days'):
         days = munkistaging['stage_days']
+        if args.removestagedays == True:
+            del munkistaging['stage_days']
+            pkgsinfo['munki_staging'] = munkistaging
+            plistlib.writePlist(pkgsinfo,file)
+            print 'Removing staging days from %s (was: %d)' % (file, days)
+            continue
 
     if stagedays >=0:
         munkistaging['stage_days'] = stagedays
@@ -57,6 +71,7 @@ for file in args.pkgsinfo:
         plistlib.writePlist(pkgsinfo,file)
         print 'Changing %s staging days from %s to %d' % (file, days, stagedays)
         continue
+
 
     print '%s has staging days %s' % (file, days)
 
