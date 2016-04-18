@@ -388,17 +388,26 @@ is enabled.
 
 In order to help with this, there is a python script that you can use
 to set the number of staging days for a package; this script
-``munkistaging-pkgsinfo.py`` can be run as below to set the staging
-days to be 1 (as in the above pkgsinfo file):
+``munkistaging-pkgsinfo.py`` in the ``bin`` directory can be run as
+below to set the staging days or to remove this key from the plist
+file. For example, to set the staging days to be 1 day (as in the above
+pkgsinfo file) you would run:
 ```
-$ python munkistaging-pkgsinfo.py --stagedays 1 /path/to/pkgsinfo/file
+$ python bin/munkistaging-pkgsinfo.py --stagedays 1 /path/to/pkgsinfo/file
+```
+To remove this (note that setting stagedays to 0 means that the
+package will staged at the next run), you would run:
+```
+$ python bin/munkistaging-pkgsinfo.py --removestagedays /path/to/pkgsinfo/file
 ```
 The full usage is:
 ```
-$ munkistaging-pkgsinfo.py [--stagedays <n>] <pkgsinfo_file>+
+$ munkistaging-pkgsinfo.py [--stagedays <n>] [--removestagedays] <pkgsinfo_file>+
 ```
 where 
 * ``--stagedays``:  optional; the number of days to stage 
+* ``--removestagedays``:  optional; removes the key (if present) from
+the pkgsinfo file
 * ``<pkgsinfo_file>``: is a path to a pkgsinfo file
 
 If run without an argument will report on the number of staging days
