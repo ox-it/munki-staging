@@ -19,7 +19,8 @@ from datetime import datetime
 
 from shutil import copy2
 import os
-from string import join
+from string import join,atoi
+from datetime import date, datetime, timedelta
 
 # From http://stackoverflow.com/questions/3167154/how-to-split-a-dos-path-into-its-components-in-python
 def split_path(p):
@@ -321,15 +322,6 @@ class Package:
         newpkgs = join(pkgpath_array, os.sep)
         return os.path.join(newroot,newpkgs)
 
-
-    def set_trello_due_date(self):
-       due_date = self.trello_catalog.due_date()
-       if due_date:
-           self.trelloboard.trello.cards.update_due(self.trello_card_id,
-                                                    due_date)
-
-           self.trello_due_date = self.trello_catalog.due_date_epoch
-
     def move_munki_catalog(self, trello_catalog):
         catalog = trello_catalog.catalog_name
         self.munki_repo.update_pkgsinfo_catalog(self.pkgsinfo, catalog)
@@ -338,6 +330,35 @@ class Package:
     def reset_due_date(self):
         self.trelloboard.trello.cards.update_due(self.trello_card_id, None)
         self.trello_due_date = None
+
+    def get_due_date(self, default_due):
+        pkgsinfo = self.munki_repo.read_pkgsinfo(self.pkgsinfo)
+        if pkgsinfo.has_key('munki_staging'):
+            pkgsinfo_mstagingcfg = pkgsinfo['munki_staging']
+            if pkgsinfo_mstagingcfg.has_key('stage_days'): 
+                days = atoi(pkgsinfo_mstagingcfg['stage_days'])
+                delta = timedelta(days=days)
+                now = datetime.utcnow()
+                due_date = now + delta
+                due_date_epoch = due_date
+                due_date_str   = due_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+                return due_date_str
+
+        return default_due
+
+    def set_trello_due_date(self):
+       # Get the default from the catalog
+       due_date = self.trello_catalog.due_date()
+       # If there is a due date we  consult the pkgsinfo file to see
+       # if an override has been set
+       # If there is no due date we assume we are not autostaging, and
+       # thus do not set a date
+       if due_date:
+           due_date = self.get_due_date(due_date) 
+           self.trelloboard.trello.cards.update_due(self.trello_card_id,
+                                                    due_date)
+
+           self.trello_due_date = self.trello_catalog.due_date_epoch
 
     def add_trello_comment(self, message):
         self.trelloboard.trello.cards.new_action_comment(self.trello_card_id, message)
