@@ -48,9 +48,13 @@ for file in args.pkgsinfo:
     if not os.path.exists(file):
         print "Skippking pkgsinfo file: %s (not found)" % file
         continue
-
-    pkgsinfo = plistlib.readPlist(file)
-
+    
+    try:
+        pkgsinfo = plistlib.readPlist(file)
+    except Exception as e:
+        print 'Unable to load file %s: %s' % (file, e)
+        continue
+    
     munkistaging = {}
     if pkgsinfo.has_key('munki_staging'):
         munkistaging = pkgsinfo['munki_staging']
