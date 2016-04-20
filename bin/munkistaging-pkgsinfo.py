@@ -44,15 +44,15 @@ if args.removestagedays == True:
         print "Cannot both set (stagedays >=0) and remove stagedays"
         sys.exit(1)
 
-for file in args.pkgsinfo:
-    if not os.path.exists(file):
-        print "Skippking pkgsinfo file: %s (not found)" % file
+for pkgsinfo_file in args.pkgsinfo:
+    if not os.path.exists(pkgsinfo_file):
+        print "Skippking pkgsinfo file: %s (not found)" % pkgsinfo_file
         continue
     
     try:
-        pkgsinfo = plistlib.readPlist(file)
+        pkgsinfo = plistlib.readPlist(pkgsinfo_file)
     except Exception as e:
-        print 'Unable to load file %s: %s' % (file, e)
+        print 'Unable to load file %s: %s' % (pkgsinfo_file, e)
         continue
     
     munkistaging = {}
@@ -64,18 +64,21 @@ for file in args.pkgsinfo:
         days = munkistaging['stage_days']
         if args.removestagedays == True:
             del munkistaging['stage_days']
-            pkgsinfo['munki_staging'] = munkistaging
-            plistlib.writePlist(pkgsinfo,file)
-            print 'Removing staging days from %s (was: %d)' % (file, days)
+            if len(munkistaging) == 0 and pkgsinfo.has_key('munki_staging'):
+               del pkgsinfo['munki_staging'] 
+            else:
+                pkgsinfo['munki_staging'] = munkistaging
+            plistlib.writePlist(pkgsinfo,pkgsinfo_file)
+            print 'Removing staging days from %s (was: %d)' % (pkgsinfo_file, days)
             continue
 
     if stagedays >=0:
         munkistaging['stage_days'] = stagedays
         pkgsinfo['munki_staging'] = munkistaging
-        plistlib.writePlist(pkgsinfo,file)
-        print 'Changing %s staging days from %s to %d' % (file, days, stagedays)
+        plistlib.writePlist(pkgsinfo,pkgsinfo_file)
+        print 'Changing %s staging days from %s to %d' % (pkgsinfo_file, days, stagedays)
         continue
 
 
-    print '%s has staging days %s' % (file, days)
+    print '%s has staging days %s' % (pkgsinfo_file, days)
 
