@@ -54,7 +54,9 @@ class MunkiRepository:
                 pkgsinfo = os.path.join(root, file)
                 try: 
                     plist = plistlib.readPlist(pkgsinfo)
-                except:
+                except Exception as e:
+                   print 'Ignoring invalid pkgsinfo file %s' % (pkgsinfo)
+                   print '(Error: %s)' % (e)
                    continue
   
                 package = Package( plist['name'], plist['version'],
