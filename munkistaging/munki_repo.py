@@ -50,23 +50,25 @@ class MunkiRepository:
         for root, dirs, files in os.walk( self.pkgsinfo_path ) :
             for file in files:
                 # Ingore invisible files
-                if not file.startswith('.'):
-                  # It is conceivable there are broken / non plist files
-                  # so we try to parse the files, just in case
-                  pkgsinfo = os.path.join(root, file)
-                  try: 
-                      plist = plistlib.readPlist(pkgsinfo)
-                  except Exception as e:
-                     print 'Ignoring invalid pkgsinfo file %s' % (pkgsinfo)
-                     print '(Error: %s)' % (e)
-                     continue
-    
-                  package = Package( plist['name'], plist['version'],
+                if file.startswith('.'):
+                  print 'Ignoring hidden file %s' % (file)
+                  continue
+                # It is conceivable there are broken / non plist files
+                # so we try to parse the files, just in case
+                pkgsinfo = os.path.join(root, file)
+                try: 
+                    plist = plistlib.readPlist(pkgsinfo)
+                except Exception as e:
+                   print 'Ignoring invalid pkgsinfo file %s' % (pkgsinfo)
+                   print '(Error: %s)' % (e)
+                   continue
+
+                package = Package( plist['name'], plist['version'],
                                      pkgsinfo=pkgsinfo,
                                      munki_catalogs=plist['catalogs'],
                                      munki_repo=self)
 
-                  self.package_list.append(package)
+                self.package_list.append(package)
                 
         return self.package_list
 
