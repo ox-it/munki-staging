@@ -277,6 +277,10 @@ class MunkiStagingConfig(RawConfigParser):
        return self._get_option('rssfeeds', 'get_description_template',
            default_value = 'Software packages in %s catalog')
 
+    def get_slack_webhook(self):
+	return self._get_option('notify', 'slack_webhook',
+	   default_value = False)
+
     def autostage_schedule(self, catalog=None):
         if have_dateutil == 0:
             print 'python module dateutil is not installed'
