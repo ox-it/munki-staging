@@ -119,6 +119,7 @@ munki-staging.cfg-template.
 The configuration file has several sections:
   * the `[main]` section with some global defaults
   * the optional `[rssfeeds]` section 
+  * the optional `[notify]` section 
   * Munki repository sections (`[munki_repo_<name>]`)
   * Munki catalog sections (`[munki_catalog_<name>]`)
   * Auto staging schedule sections (`[schedule]` and/or `[schedule_<name>]`)
@@ -192,6 +193,25 @@ guid_link_template=https://site.orchard.ox.ac.uk/packages/%(name)s/%(version)s
 catalog_link_template=https://site.orchard.ox.ac.uk/catalogs/%(catalog)s
 description_template='Software packages in Orchard %(catalog)s catalog'
 icon_url_template=https://site.orchard.ox.ac.uk/munki/%(icon_path)s
+```
+
+#### The `[notify]` section
+
+If present, this section configures the output of notifications to inform you
+about packages that have been moved from one catalog to another.
+
+The following methodes are supported:
+
+##### Slack
+Requirements:
+
+* For python: install [slackweb](https://github.com/satoshi03/slack-python-webhook)
+* Configura a slack webhook as described [here](https://my.slack.com/services/new/incoming-webhook/).
+
+At the slack webhook to your configuration. Here is an example:
+```
+[notify]
+slack_webhook=https://my.webhook
 ```
 
 #### The Munki catalog sections `[munki_catalog_<name>]`
