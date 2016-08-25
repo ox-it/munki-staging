@@ -200,13 +200,13 @@ icon_url_template=https://site.orchard.ox.ac.uk/munki/%(icon_path)s
 If present, this section configures the output of notifications to inform you
 about packages that have been moved from one catalog to another.
 
-The following methodes are supported:
+The following methods are supported:
 
 ##### Slack
 Requirements:
 
 * For python: install [slackweb](https://github.com/satoshi03/slack-python-webhook)
-* Configura a slack webhook as described [here](https://my.slack.com/services/new/incoming-webhook/).
+* Configure a slack webhook as described [here](https://my.slack.com/services/new/incoming-webhook/).
 
 At the slack webhook to your configuration. Here is an example:
 ```
