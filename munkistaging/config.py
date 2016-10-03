@@ -285,6 +285,10 @@ class MunkiStagingConfig(RawConfigParser):
 	return self._get_option('notify', 'mail_server',
 	   default_value = False)
 
+    def get_mail_from(self):
+	return self._get_option('notify', 'mail_from',
+	   default_value = False)
+
     def get_mail_to(self):
 	return self._get_option('notify', 'mail_to',
 	   default_value = False)

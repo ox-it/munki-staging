@@ -21,9 +21,10 @@ from email.mime.text import MIMEText
 
 class MunkiNotify:
 
-	def __init__(self, webhook, mail_server, mail_to):
+	def __init__(self, webhook, mail_server, mail_to, mail_from):
 		self.mail_server = mail_server
 		self.mail_to = mail_to
+		self.mail_from = mail_from
 		self.slack_webhook = webhook
 		self.slack = slackweb.Slack(url=self.slack_webhook)
 		self.notes = dict()
@@ -71,7 +72,7 @@ class MunkiNotify:
 			print "Mail notification configured. Sending mail."
 			msg = MIMEText(self.create_msg(self.notes))
 			msg['Subject'] = "MunkiStaging Notification"
-			msg['From'] = "munki@unibas.ch"
+			msg['From'] = self.mail_from
 			msg['To'] = self.mail_to
 			s = smtplib.SMTP(self.mail_server)
 			s.sendmail(msg['From'], msg['To'], msg.as_string())

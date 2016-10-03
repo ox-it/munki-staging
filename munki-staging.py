@@ -44,7 +44,8 @@ packagelist = PackageList()
 munkinotify = MunkiNotify(
 		config.get_slack_webhook(),
 		config.get_mail_server(),
-		config.get_mail_to())
+		config.get_mail_to(),
+		config.get_mail_from())
 
 makecatalogs = config.get_makecatalogs()
 repo_count = 0
