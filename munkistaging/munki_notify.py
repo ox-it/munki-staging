@@ -40,7 +40,6 @@ class MunkiNotify:
 		for note in notes:
 			self.add_attachment(note, notes[note])
 
-
 	def add_attachment(self, catalog, pkgs):
 		attachment = {"title": "The following pkgs were added to catalog %s:" % (catalog.upper()),
 				"text": "\n".join(pkgs),
@@ -49,6 +48,14 @@ class MunkiNotify:
 		self.attachments.append(attachment)
 		return self.attachments
 
+	def create_msg(self, notes):
+		msg = ""
+		for note in notes:
+			msg += "The follwoing pkgs were added to catalog %s:\n" % (note.upper())
+			for pkg in notes[note]:
+				msg += "%s\n" % (pkg)
+		return msg
+	
 	def sendto_slack(self):
 		if self.slack_webhook is False:
 			print "No webhook defined. Not sending anything to slack."
@@ -62,11 +69,11 @@ class MunkiNotify:
 			print "Mail notification not configured. Not sending anything by mail."
 		else:
 			print "Mail notification configured. Sending mail."
-			msg = MIMEText(self.create_attachements(self.notes))
+			msg = MIMEText(self.create_msg(self.notes))
 			msg['Subject'] = "MunkiStaging Notification"
 			msg['From'] = "munki@unibas.ch"
 			msg['To'] = self.mail_to
-             		s = smtplib.SMTP(self.mail_server)
+			s = smtplib.SMTP(self.mail_server)
 			s.sendmail(msg['From'], msg['To'], msg.as_string())
 			s.quit()
 
