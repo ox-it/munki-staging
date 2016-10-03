@@ -57,7 +57,7 @@ class MunkiNotify:
 			self.create_attachements(self.notes)
 			self.slack.notify(attachments=self.attachments)
 
-	def sendto_slack(self):
+	def sendto_mail(self):
 		if self.mail_server is False or self.mail_to is False:
 			print "Mail notification not configured. Not sending anything by mail."
 		else:
