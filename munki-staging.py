@@ -41,7 +41,10 @@ config.read_config()
 
 # Build a list of all packages we know about
 packagelist = PackageList()
-munkinotify = MunkiNotify(config.get_slack_webhook())
+munkinotify = MunkiNotify(
+		config.get_slack_webhook(),
+		config.get_mail_server(),
+		config.get_mail_to())
 
 makecatalogs = config.get_makecatalogs()
 repo_count = 0

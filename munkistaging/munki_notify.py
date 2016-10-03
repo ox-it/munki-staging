@@ -15,12 +15,15 @@
 # permissions and limitations under the License.
 #
 
-
 import slackweb
+import smtplib
+from email.mime.text import MIMEText
 
 class MunkiNotify:
 
-	def __init__(self, webhook):
+	def __init__(self, webhook, mail_server, mail_to):
+		self.mail_server = mail_server
+		self.mail_to = mail_to
 		self.slack_webhook = webhook
 		self.slack = slackweb.Slack(url=self.slack_webhook)
 		self.notes = dict()
@@ -46,14 +49,30 @@ class MunkiNotify:
 		self.attachments.append(attachment)
 		return self.attachments
 
-
-	def notify(self):
+	def sendto_slack(self):
 		if self.slack_webhook is False:
 			print "No webhook defined. Not sending anything to slack."
 		else:
 			print "Webhook defined. Printing to slack"
 			self.create_attachements(self.notes)
 			self.slack.notify(attachments=self.attachments)
+
+	def sendto_slack(self):
+		if self.mail_server is False or self.mail_to is False:
+			print "Mail notification not configured. Not sending anything by mail."
+		else:
+			print "Mail notification configured. Sending mail."
+			msg = MIMEText(self.create_attachements(self.notes))
+			msg['Subject'] = "MunkiStaging Notification"
+			msg['From'] = "munki@unibas.ch"
+			msg['To'] = self.mail_to
+             		s = smtplib.SMTP(self.mail_server)
+			s.sendmail(msg['From'], msg['To'], msg.as_string())
+			s.quit()
+
+	def notify(self):
+		self.sendto_slack()
+		self.sendto_mail()
 
 
 if __name__ == "__main__":
