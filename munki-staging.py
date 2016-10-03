@@ -110,6 +110,7 @@ print "Finding missing packages .... "
 for pkg in packagelist.missing_trello_card():
    print "Missing: ", pkg
    pkg.add_trello_card(munki_trello)
+   munkinotify.add_note(pkg.trello_catalog.catalog_name, str(pkg))
 
 print "Migrating To lists .... "
 
