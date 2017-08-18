@@ -18,6 +18,7 @@
 import munkistaging.default_settings as default_settings
 
 from munkistaging.config import MunkiStagingConfig
+from munkistaging.munki_notify import MunkiNotify
 
 from munkistaging import PackageList, Package
 from munkistaging.munki_repo import MunkiRepository
@@ -40,6 +41,11 @@ config.read_config()
 
 # Build a list of all packages we know about
 packagelist = PackageList()
+munkinotify = MunkiNotify(
+		config.get_slack_webhook(),
+		config.get_mail_server(),
+		config.get_mail_to(),
+		config.get_mail_from())
 
 makecatalogs = config.get_makecatalogs()
 repo_count = 0
@@ -104,6 +110,7 @@ print "Finding missing packages .... "
 for pkg in packagelist.missing_trello_card():
    print "Missing: ", pkg
    pkg.add_trello_card(munki_trello)
+   munkinotify.add_note(pkg.trello_catalog.catalog_name, str(pkg))
 
 print "Migrating To lists .... "
 
@@ -119,6 +126,7 @@ for catalog_name in munki_trello.catalog_lists.keys():
   
    for package in packagelist.in_list(to_id):
       print "Moving package %s" % package
+      munkinotify.add_note(catalog_name, str(package))
       package.move_munki_catalog(catalog)
       package.move_trello_list(catalog)
 
@@ -129,6 +137,7 @@ autostage_schedule = config.autostage_schedule()
 if autostage_schedule is None or autostage_schedule.stage_now():
     print "About to autostage ... "
     for package in packagelist.auto_stage():
+	munkinotify.add_note(package.trello_catalog.stage_to().catalog_name, str(package))
         package.auto_stage()   
 
 
@@ -184,4 +193,5 @@ for pkg in packagelist.keys():
     package = packagelist[pkg]
 #    print package.munki_repo.name
 
+munkinotify.notify()
 sys.exit(0)
