@@ -417,7 +417,13 @@ class Package:
     def get_description(self):
        # open 
        pkgsinfo = self.munki_repo.read_pkgsinfo(self.pkgsinfo)
-       return pkgsinfo['description']
+       try:
+           descr =  pkgsinfo['description']
+       except KeyError:
+           print 'Package %s has no description' % (self,)
+           descr='No description in pkgsinfo file'
+
+       return descr
 
     def get_munki_icon(self):
        icon = self.munki_repo.get_icon(self.pkgsinfo)
@@ -425,7 +431,7 @@ class Package:
 
     def get_display_name(self):
        pkgsinfo = self.munki_repo.read_pkgsinfo(self.pkgsinfo)
-       return pkgsinfo['display_name'] 
+       return pkgsinfo.get('display_name') or pkgsinfo.get('name')
 
     def card_name(self):
         title = self.get_display_name()
