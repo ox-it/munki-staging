@@ -178,7 +178,7 @@ class Package:
         return self.__str__()
 
     def __str__(self):
-        return 'package: %s %s' % (self.name, self.version)
+        return 'Package: %s %s' % (self.name, self.version)
 
     def key(self):
         return '%s %s' % (self.name, self.version)
@@ -420,7 +420,7 @@ class Package:
        try:
            descr =  pkgsinfo['description']
        except KeyError:
-           print 'Package %s has no description' % (self,)
+           print '%s has no description' % (self,)
            descr='No description in pkgsinfo file'
 
        return descr
@@ -436,6 +436,3 @@ class Package:
     def card_name(self):
         title = self.get_display_name()
         return '%s %s' % (title, self.version)
-  
-
-
