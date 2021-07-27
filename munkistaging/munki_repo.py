@@ -86,10 +86,10 @@ class MunkiRepository:
             return
         
         makecat = subprocess.Popen([self.munki_makecatalogs, self.munki_path],
-                                 stdout=subprocess.PIPE)
-        lines_iterator = iter(makecat.stdout.readline, b"")
-        for line in lines_iterator:
-            print(line) # yield line
+                                   stdout=subprocess.PIPE)
+        for line in makecat.stdout:
+	    if line != "":
+            	print(line.rstrip().decode('utf-8')) # yield line
 
         return
 
