@@ -98,10 +98,16 @@ class MunkiTrelloBoard:
                        % ( card['name'], listname )
                 continue
 
+            attempts = 0
             try:
                 name, version = self.get_name_version_from_card( card['id'] )
             except Exception, e:
-                raise ValueError('Got exception %s trying to find version from card %s' % (e, card['name']) )
+                attempts +=1
+                if attempts == 5:
+                        raise ValueError('Got exception %s trying to find version from card %s' % (e, card['name']) )
+                else:
+                        print 'Got exception trying to find version from card %s, retrying...' % (card['name'])
+                        continue
 
             due = None 
             if card['due'] is not None:
