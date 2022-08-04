@@ -100,15 +100,16 @@ class MunkiTrelloBoard(object):
                 continue
 
             attempts = 0
-            try:
-                name, version = self.get_name_version_from_card( card['id'] )
-            except Exception as e:
-                attempts +=1
-                if attempts == 5:
+            while attempts <= 4:
+                try:
+                    name, version = self.get_name_version_from_card( card['id'] )
+                    break
+                except Exception as e:
+                    attempts +=1
+                    print('Got exception trying to find version from card %s, retrying...' % (card['name']))
+                finally:
+                    if attempts == 4:
                         raise ValueError('Got exception %s trying to find version from card %s' % (e, card['name']) )
-                else:
-                        print('Got exception trying to find version from card %s, retrying...' % (card['name']))
-                        continue
 
             due = None 
             if card['due'] is not None:

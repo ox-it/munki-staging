@@ -106,7 +106,7 @@ class MunkiRepository(object):
                                    stdout=subprocess.PIPE)
         for line in makecat.stdout:
             if line != "":
-            	print(line.rstrip().decode('utf-8')) # yield line
+                print("makecatalogs: " + line.rstrip().decode('utf-8')) # yield line
 
         return
 

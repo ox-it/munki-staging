@@ -176,7 +176,7 @@ class Package(object):
         return self.__str__()
 
     def __str__(self):
-        return 'Package: %s %s' % (self.name, self.version)
+        return 'Package "%s with version  %s"' % (self.name, self.version)
 
     def key(self):
         return '%s %s' % (self.name, self.version)
