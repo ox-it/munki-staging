@@ -15,6 +15,7 @@
 # permissions and limitations under the License.
 #
 
+from __future__ import print_function
 import plistlib
 import argparse
 import os
@@ -36,49 +37,49 @@ stagedays = -1
 if args.__contains__('stagedays') and args.stagedays is not None:
     stagedays = args.stagedays
     if stagedays < 0:
-        print "Can only set stagedays to be a positive integer"
+        print("Can only set stagedays to be a positive integer")
         sys.exit(1)
 
 if args.removestagedays == True:
     if stagedays >= 0:
-        print "Cannot both set (stagedays >=0) and remove stagedays"
+        print("Cannot both set (stagedays >=0) and remove stagedays")
         sys.exit(1)
 
 for pkgsinfo_file in args.pkgsinfo:
     if not os.path.exists(pkgsinfo_file):
-        print "Skippking pkgsinfo file: %s (not found)" % pkgsinfo_file
+        print("Skippking pkgsinfo file: %s (not found)" % pkgsinfo_file)
         continue
     
     try:
-        pkgsinfo = plistlib.readPlist(pkgsinfo_file)
+        pkgsinfo = plistlib.load(pkgsinfo_file)
     except Exception as e:
-        print 'Unable to load file %s: %s' % (pkgsinfo_file, e)
+        print('Unable to load file %s: %s' % (pkgsinfo_file, e))
         continue
     
     munkistaging = {}
-    if pkgsinfo.has_key('munki_staging'):
+    if 'munki_staging' in pkgsinfo:
         munkistaging = pkgsinfo['munki_staging']
 
     days = '(unset)'
-    if munkistaging.has_key('stage_days'):
+    if 'stage_days' in munkistaging:
         days = munkistaging['stage_days']
         if args.removestagedays == True:
             del munkistaging['stage_days']
-            if len(munkistaging) == 0 and pkgsinfo.has_key('munki_staging'):
+            if len(munkistaging) == 0 and 'munki_staging' in pkgsinfo:
                del pkgsinfo['munki_staging'] 
             else:
                 pkgsinfo['munki_staging'] = munkistaging
             plistlib.writePlist(pkgsinfo,pkgsinfo_file)
-            print 'Removing staging days from %s (was: %d)' % (pkgsinfo_file, days)
+            print('Removing staging days from %s (was: %d)' % (pkgsinfo_file, days))
             continue
 
     if stagedays >=0:
         munkistaging['stage_days'] = stagedays
         pkgsinfo['munki_staging'] = munkistaging
         plistlib.writePlist(pkgsinfo,pkgsinfo_file)
-        print 'Changing %s staging days from %s to %d' % (pkgsinfo_file, days, stagedays)
+        print('Changing %s staging days from %s to %d' % (pkgsinfo_file, days, stagedays))
         continue
 
 
-    print '%s has staging days %s' % (pkgsinfo_file, days)
+    print('%s has staging days %s' % (pkgsinfo_file, days))
 

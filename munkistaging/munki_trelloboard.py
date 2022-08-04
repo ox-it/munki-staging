@@ -1,3 +1,4 @@
+from __future__ import print_function
 #
 # This software is Copyright (c) 2015 University of Oxford
 # 
@@ -14,6 +15,7 @@
 # permissions and limitations under the License.
 #
 
+from builtins import object
 from . import Package
 
 import trello
@@ -22,9 +24,8 @@ import requests
 import json
 
 from datetime import date, datetime, timedelta
-from string import atoi
 
-class MunkiTrelloBoard:
+class MunkiTrelloBoard(object):
 
     card_comment = '**System Info**\nName: %s\nVersion: %s'
     name_version_re = re.compile('^\*\*System Info\*\*\sName: (.*)\sVersion: (.*)$', flags=re.MULTILINE)
@@ -86,7 +87,7 @@ class MunkiTrelloBoard:
         for card in self.trello_boards.get_card(self.board_id):
 
             listid = card['idList']
-            if self.list_id_catalog.has_key(listid):
+            if listid in self.list_id_catalog:
                 trello_catalog = self.list_id_catalog[ card['idList'] ]
             else:
                 try: 
@@ -94,19 +95,19 @@ class MunkiTrelloBoard:
                 except KeyError:
                     listname = '(unknown)'
 
-                print "\tIgnoring card '%s' in unrecognised list '%s'" \
-                       % ( card['name'], listname )
+                print("\tIgnoring card '%s' in unrecognised list '%s'" \
+                       % ( card['name'], listname ))
                 continue
 
             attempts = 0
             try:
                 name, version = self.get_name_version_from_card( card['id'] )
-            except Exception, e:
+            except Exception as e:
                 attempts +=1
                 if attempts == 5:
                         raise ValueError('Got exception %s trying to find version from card %s' % (e, card['name']) )
                 else:
-                        print 'Got exception trying to find version from card %s, retrying...' % (card['name'])
+                        print('Got exception trying to find version from card %s, retrying...' % (card['name']))
                         continue
 
             due = None 
@@ -146,7 +147,7 @@ class MunkiTrelloBoard:
         card_action_comment = self.card_comment % ( package.name, package.version)
 
         catalog_list = self.list_from_catalog( package.munki_catalogs[0] )
-        new_card = catalog_list.new_card( package.card_name(), card_action_comment )
+        new_card = catalog_list.new_card( package.card_name(), card_action_comment)
 
         package.trello_card_id = new_card['id']
         package.trello_list_id = new_card['idList']
@@ -175,7 +176,7 @@ class MunkiTrelloBoard:
          catalog_name = config_dict['catalog']
 
          to_list_name = config_dict.get('to_list', 'To %s' % list_name)
-         stage_days = atoi(config_dict.get('stage_days', '0'))
+         stage_days = int(config_dict.get('stage_days', '0'))
          autostage  = config_dict.get('autostage', False)
          if autostage == 1 or autostage == '1':
              autostage = True
@@ -187,10 +188,10 @@ class MunkiTrelloBoard:
          munki_repo_name = config_dict.get('munki_repo', None)
          munki_repo = None
          if munki_repo_name is not None:
-            if self.config.repositories.has_key(munki_repo_name):
+            if munki_repo_name in self.config.repositories:
                munki_repo = self.config.repositories[munki_repo_name]
             else:
-               raise ValueError('Could not find munki repository %s in defined list of repositories %s'  % (munki_repo_name, self.config.repositories.keys()))
+               raise ValueError('Could not find munki repository %s in defined list of repositories %s'  % (munki_repo_name, list(self.config.repositories.keys())))
          else:
             raise ValueError('No munki repository name give for list' %  list_name)
 
@@ -222,16 +223,15 @@ class MunkiTrelloBoard:
  
     def get_list_name(self, name):
         self.get_lists() 
-
-        if self.trello_name_list.has_key(name):
+        if name in self.trello_name_list:
             return self.trello_name_list[name]
-
-        raise KeyError('Trello Board id %s has no list of name %s' %( self.board_id, name) ) 
+        else:
+            raise KeyError('Trello Board id %s has no list of name %s' %( self.board_id, name) ) 
 
     def find_list(self, name):
         self.get_lists() 
 
-        if self.trello_name_list.has_key(name):
+        if name in self.trello_name_list:
             return self.trello_name_list[name]
  
         return None
@@ -245,10 +245,9 @@ class MunkiTrelloBoard:
         # we convert this into a regex by substituting '%X' with '\d+'
         # Although not prefect by any means, this should allow us
         # some scope to have custom date formats
-
-        list_name_re = re.compile( re.sub('%\w+', '\d+', pattern) )
+        list_name_re = re.compile(re.sub('%\\\w+', '\\\d+', pattern))
         rv = []
-        for key in self.trello_name_list.keys():
+        for key in list(self.trello_name_list.keys()):
             if list_name_re.match(key):
                 rv.append(self.trello_name_list[key])
 
@@ -278,12 +277,12 @@ class MunkiTrelloBoard:
         updates = self.trello.cards.get_action(cardid, filter='updateCard')
         for update in updates:
 
-           if not update.has_key('data'):
+           if 'data' not in update:
                next
         
            data = update['data']
 
-           if     data.has_key('listAfter') \
+           if     'listAfter' in data \
               and data['listAfter']['name'] == catalog.list_name:
                return datetime.strptime(update['date'], '%Y-%m-%dT%H:%M:%S.%fZ')
 
@@ -295,11 +294,11 @@ class MunkiTrelloBoard:
 
     def print_catalog_lists(self):
         if self.catalog_lists is None:
-            print '(Catalog lists not set up)'
+            print('(Catalog lists not set up)')
             return
 
-        for c in self.catalog_lists.keys():
-            print '\tUsing Catalog:  %s' % c
+        for c in list(self.catalog_lists.keys()):
+            print('\tUsing Catalog:  %s' % c)
             self.catalog_lists[c].print_catalog() 
         return
 
@@ -316,7 +315,7 @@ class MunkiTrelloBoard:
    
         return (True, '')
 
-class MunkiTrelloBoardCatalogList:
+class MunkiTrelloBoardCatalogList(object):
     
     def __init__(self, trelloboard,  list_name, catalog_name, to_list_name,
                       stage_days, autostage, stage_to_name, stage_from_name,
@@ -340,7 +339,6 @@ class MunkiTrelloBoardCatalogList:
         self.munki_repo_name = munki_repo_name
         self.munki_repo      = munki_repo
         self.autostage_schedule  = autostage_schedule
-     
         # To list (as it is easiest being not dated)
         self.to_list = trelloboard.get_list_name(self.to_list_name)
      
@@ -364,14 +362,14 @@ class MunkiTrelloBoardCatalogList:
         return 'Catalog list for %s' % self.list_name
 
     def get_list_ids(self):
-        return map(lambda list: list['id'], self.lists)
+        return [list['id'] for list in self.lists]
 
     def new_card(self, card_title, action_comment ):
         if self.create_list is None:
             self.create_new_list()
 
         listid = self.create_list['id']
-        card_dict = self.trelloboard.trello.lists.new_card(listid, card_title)
+        card_dict = self.trelloboard.trello.lists.new_card(listid, card_title, None)
         self.trelloboard.trello.cards.new_action_comment(card_dict['id'], action_comment)
         return card_dict
     
@@ -395,6 +393,7 @@ class MunkiTrelloBoardCatalogList:
 
     def due_date(self):
 
+        print(self.due_date_str)
         if self.due_date_str is not None:
             return  self.due_date_str
 
@@ -414,7 +413,7 @@ class MunkiTrelloBoardCatalogList:
          if self._stage_to is not None:
              return self._stage_to
       
-         if self.trelloboard.catalog_lists.has_key(self.stage_to_name):
+         if self.stage_to_name in self.trelloboard.catalog_lists:
              self._stage_to = self.trelloboard.catalog_lists[self.stage_to_name]
              return self._stage_to
 
@@ -424,13 +423,13 @@ class MunkiTrelloBoardCatalogList:
          if self._stage_from is not None:
              return self._stage_from
       
-         if self.trelloboard.catalog_lists.has_key(self.stage_from_name):
+         if self.stage_from_name in self.trelloboard.catalog_lists:
              self._stage_from = self.trelloboard.catalog_lists[self.stage_from_name]
              return self.stage_from
 
          raise ValueError('Cannot find catalog %s to stage from' % self.stage_from_name)
 
     def print_catalog(self):
-        print '\t\tTrello list %s' % self.list_name
-        print '\t\tTrello to list %s' % self.to_list_name
-        print '\t\tRelated Munki repository %s (path: %s) ' % (self.munki_repo_name, self.munki_repo.munki_path)
+        print('\t\tTrello list %s' % self.list_name)
+        print('\t\tTrello to list %s' % self.to_list_name)
+        print('\t\tRelated Munki repository %s (path: %s) ' % (self.munki_repo_name, self.munki_repo.munki_path))

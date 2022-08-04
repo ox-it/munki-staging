@@ -14,6 +14,8 @@
 # permissions and limitations under the License.
 #
 
+from builtins import str
+from builtins import object
 from PyRSS2Gen import RSS2,RSSItem, Guid
 
 import datetime
@@ -100,7 +102,7 @@ class MunkiStagingRSSItem(RSSItem):
            handler.characters( self.pubDate.strftime('%Y-%m-%dT%H:%M:%SZ') )
            handler.endElement('dc:date')
 
-class MediaContentImage:
+class MediaContentImage(object):
     """Publish an item Image
  
        Note that a media Content image can do so much more, but we

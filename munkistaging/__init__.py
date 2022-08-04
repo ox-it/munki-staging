@@ -1,3 +1,4 @@
+from __future__ import print_function
 #
 # This software is Copyright (c) 2015 University of Oxford
 # 
@@ -14,12 +15,12 @@
 # permissions and limitations under the License.
 #
 
+from builtins import object
 from .rssfeed import MediaContentImage, MunkiStagingRSSItem
 from datetime import datetime
 
 from shutil import copy2
 import os
-from string import join,atoi
 from datetime import date, datetime, timedelta
 
 # From http://stackoverflow.com/questions/3167154/how-to-split-a-dos-path-into-its-components-in-python
@@ -33,7 +34,7 @@ class PackageList(dict):
        self[package.key()] = package
 
    def add_or_update_package(self,package):
-       if self.has_key(package.key()):
+       if package.key() in self:
            self.update_package(package)
        else:
            self.add_package(package)
@@ -73,24 +74,23 @@ class PackageList(dict):
         return PackageListAutoStageList(self)
       
 
-class PackageListAutoStageList:
+class PackageListAutoStageList(object):
 
    def __init__(self, package_list):
        self.package_list = package_list
-       self.key_list = package_list.keys()
+       self.key_list = list(package_list.keys())
        self.now = datetime.utcnow()
 
    def __iter__(self):
        return self
 
-   def next(self):
+   def __next__(self):
        while len(self.key_list) > 0:
            pkg = self.key_list.pop()
            package = self.package_list[pkg]
 
            if package.trello_due_date is None:
                continue
-        
            if package.trello_catalog.autostage == False:
                continue
 
@@ -99,25 +99,23 @@ class PackageListAutoStageList:
                # There is a schedule, so we check it
                if package.trello_catalog.autostage_schedule.stage_now() == False:
                    continue
-           
            difference = self.now - package.trello_due_date 
            if difference.total_seconds() > 0:
                return package
-       
        raise StopIteration()
 
-class PackageListInTrelloList:
+class PackageListInTrelloList(object):
 
    def __init__(self, trello_list_id, package_list):
 
        self.trello_list_id = trello_list_id
        self.package_list = package_list
-       self.key_list = package_list.keys()
+       self.key_list = list(package_list.keys())
 
    def __iter__(self):
        return self
 
-   def next(self):
+   def __next__(self):
        while len(self.key_list) > 0:
            pkg = self.key_list.pop()
            if      self.package_list[pkg].trello_list_id is not None \
@@ -128,17 +126,17 @@ class PackageListInTrelloList:
        raise StopIteration()
       
     
-class PackageListMissing:
+class PackageListMissing(object):
    def __init__(self, package_list):
        self.package_list = package_list
-       self.key_list = package_list.keys()
+       self.key_list = list(package_list.keys())
 
        self.key_list.reverse() # pop takes the last element of the list
 
    def __iter__(self):
        return self
 
-   def next(self):
+   def __next__(self):
        while len(self.key_list) > 0:
            pkg = self.key_list.pop()
            if self.package_list[pkg].trello_card_id is None:
@@ -147,7 +145,7 @@ class PackageListMissing:
        raise StopIteration()
       
        
-class Package:
+class Package(object):
    
     def __init__(self, name, version, 
                   pkgsinfo=None,
@@ -224,11 +222,11 @@ class Package:
        # repository
        migrate_packages = 1
        if self.munki_repo is None:
-           print "ERROR: package %s does not have a munki repository" % self
+           print("ERROR: package %s does not have a munki repository" % self)
            migrate_packages = 0
 
        if self.trello_catalog.munki_repo is None:
-           print "ERROR: trello catalog %s does not have a munki repository" % self.trello_catalog.list_name
+           print("ERROR: trello catalog %s does not have a munki repository" % self.trello_catalog.list_name)
            migrate_packages = 0
 
        if migrate_packages == 0:
@@ -239,13 +237,13 @@ class Package:
 
     def migrate_package(self):
        
-          print "Migrating package from", \
+          print("Migrating package from", \
                 self.munki_repo.name,"to",\
-                self.trello_catalog.munki_repo_name
+                self.trello_catalog.munki_repo_name)
 
           if self.trello_catalog.munki_repo is None:
              import sys
-             print "CAN'T MIGRATE to empty repo !"
+             print("CAN'T MIGRATE to empty repo !")
              sys.exit(1)
           
           old_repo_base = self.munki_repo.munki_path
@@ -319,7 +317,7 @@ class Package:
             else:
                 break
 
-        newpkgs = join(pkgpath_array, os.sep)
+        newpkgs = str.join(pkgpath_array, os.sep)
         return os.path.join(newroot,newpkgs)
 
     def move_munki_catalog(self, trello_catalog):
@@ -333,10 +331,10 @@ class Package:
 
     def get_due_date(self, default_due):
         pkgsinfo = self.munki_repo.read_pkgsinfo(self.pkgsinfo)
-        if pkgsinfo.has_key('munki_staging'):
+        if 'munki_staging' in pkgsinfo:
             pkgsinfo_mstagingcfg = pkgsinfo['munki_staging']
-            if pkgsinfo_mstagingcfg.has_key('stage_days'): 
-                days = atoi(pkgsinfo_mstagingcfg['stage_days'])
+            if 'stage_days' in pkgsinfo_mstagingcfg: 
+                days = str.atoi(pkgsinfo_mstagingcfg['stage_days'])
                 delta = timedelta(days=days)
                 now = datetime.utcnow()
                 due_date = now + delta
@@ -368,8 +366,8 @@ class Package:
         # Find out where we are moving
         try:
             dest_catalog = self.trello_catalog.stage_to()
-        except ValueError, msg:
-           print 'Cannot stage %s from %s (%s)' %  (self, self.trello_catalog , msg)
+        except ValueError as msg:
+           print('Cannot stage %s from %s (%s)' %  (self, self.trello_catalog , msg))
            return
  
         # Comment to add to trello card
@@ -420,7 +418,7 @@ class Package:
        try:
            descr =  pkgsinfo['description']
        except KeyError:
-           print '%s has no description' % (self,)
+           print('%s has no description' % (self,))
            descr='No description in pkgsinfo file'
 
        return descr

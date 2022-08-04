@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # This software is Copyright (c) 2015 University of Oxford
 # 
@@ -15,6 +15,7 @@
 # permissions and limitations under the License.
 #
 
+from __future__ import print_function
 import munkistaging.default_settings as default_settings
 
 from munkistaging.config import MunkiStagingConfig
@@ -32,7 +33,7 @@ try:
 except:
     pass
 
-print "Reading configuration .... "
+print("Reading configuration .... ")
 
 config = MunkiStagingConfig(allow_no_value=True)
 config.cli_parse()
@@ -45,7 +46,7 @@ makecatalogs = config.get_makecatalogs()
 repo_count = 0
 for mrepo_cfg in config.configured_munki_repositories():
     munki_repo = MunkiRepository(mrepo_cfg, makecatalogs)
-    print "Finding packages in repository", munki_repo.name, "..."
+    print("Finding packages in repository", munki_repo.name, "...")
     repo_count = repo_count + 1
     for package in munki_repo.packages():
         packagelist.add_or_update_package(package)
@@ -54,38 +55,38 @@ for mrepo_cfg in config.configured_munki_repositories():
     config.add_munki_repo( munki_repo )
 
 if repo_count == 0:
-    print "No munki repositories configured"
-    print "  if you are using a configuration file you must specify at least"
-    print "  one munki_repo_<name> section"
+    print("No munki repositories configured")
+    print("  if you are using a configuration file you must specify at least")
+    print("  one munki_repo_<name> section")
     sys.exit(1)
 
-print "Building Trello board data .... "
+print("Building Trello board data .... ")
 munki_trello = MunkiTrelloBoard(config)
 
-print "Building Munki repository data and packages .... "
+print("Building Munki repository data and packages .... ")
 # Build the catalog lists
 # (to allow us to only consisder cards in the relevant lists)
 munki_trello.setup_catalog_lists()
 
 (check, reason) = munki_trello.check_list_setup()
 if check == False:
-    print 
-    print 'Error: Incorrect Trello setup detected: %s ' % reason
+    print() 
+    print('Error: Incorrect Trello setup detected: %s ' % reason)
     config.print_expected_trello()
     sys.exit(1)
 
-print "Building Package list from Trello .... "
+print("Building Package list from Trello .... ")
 for package in munki_trello.packages():
-    if packagelist.has_key( package.key() ):
+    if package.key() in packagelist:
         packagelist.update_package(package)
     else:
-       print "Deleting card without a package %s " % package.key()
+       print("Deleting card without a package %s " % package.key())
        munki_trello.delete_package(package)
 
 
 if config.get_show_config():
     munki_trello.print_catalog_lists()
-    print "\n Terminating run - no processing performed"
+    print("\n Terminating run - no processing performed")
     sys.exit(0)
 
 # At this point, we want to
@@ -95,30 +96,30 @@ if config.get_show_config():
 #   * Remove any trello cards without packages
 #
 
-print "Finding missing packages .... "
+print("Finding missing packages .... ")
 
 # Find packages not in the trello boards
 # N.B. Will add packages according to underlying munki catalog
 # (and hence into production if that is where it says)
 # This is a change from the upstream behaviour, and may be a bug
 for pkg in packagelist.missing_trello_card():
-   print "Missing: ", pkg
+   print("Missing: ", pkg)
    pkg.add_trello_card(munki_trello)
 
-print "Migrating To lists .... "
+print("Migrating To lists .... ")
 
 # Migrate the packages from the 'To' trello list into the main list,
 # updating the Munki in formation as we go
 #
 # (XXX) Todo: is there a right way to do this, or don't we
 #             care ? Origingally this went prod, testing, unstable
-for catalog_name in munki_trello.catalog_lists.keys():
+for catalog_name in list(munki_trello.catalog_lists.keys()):
 
    catalog = munki_trello.catalog_lists[catalog_name] 
    to_id = catalog.to_list['id']
   
    for package in packagelist.in_list(to_id):
-      print "Moving package %s" % package
+      print("Moving package %s" % package)
       package.move_munki_catalog(catalog)
       package.move_trello_list(catalog)
 
@@ -127,7 +128,7 @@ for catalog_name in munki_trello.catalog_lists.keys():
 
 autostage_schedule = config.autostage_schedule()
 if autostage_schedule is None or autostage_schedule.stage_now():
-    print "About to autostage ... "
+    print("About to autostage ... ")
     for package in packagelist.auto_stage():
         package.auto_stage()   
 
@@ -139,16 +140,16 @@ if autostage_schedule is None or autostage_schedule.stage_now():
 #
 update_rssfeeds = False
 
-for key in config.repositories.keys():
+for key in list(config.repositories.keys()):
   
     if config.repositories[key].run_makecatalogs:
         update_rssfeeds = True
 
-    print "Updating munki catalogs in", key
+    print("Updating munki catalogs in", key)
     config.repositories[key].run_update_catalogs()
 
 if update_rssfeeds and config.has_section('rssfeeds'):
-    print "Building RSS feed items ..."
+    print("Building RSS feed items ...")
 
     rssdir = config.get_rssdirectory()
     rssfeeds = {}
@@ -156,10 +157,10 @@ if update_rssfeeds and config.has_section('rssfeeds'):
     guid_template     = config.get_guid_link_template()
     icon_url_template = config.get_rss_icon_url_template()
 
-    for pkg in packagelist.keys():
+    for pkg in list(packagelist.keys()):
         package = packagelist[pkg]
         catalog = package.munki_catalogs[0]
-        if not rssfeeds.has_key(catalog):
+        if catalog not in rssfeeds:
             rssfeeds[catalog] = []
         rssfeeds[catalog].append( package.rss_item(rss_link_template, guid_template, icon_url_template) )
 
@@ -168,7 +169,7 @@ if update_rssfeeds and config.has_section('rssfeeds'):
 
     catalog_link_template = config.get_catalog_link_template()
     description_template = config.get_description_template()
-    for feed in rssfeeds.keys():
+    for feed in list(rssfeeds.keys()):
         items = rssfeeds[feed]
         rss = MunkiStagingRSSFeed(
                  title = '%s Catalog' % feed,
@@ -180,7 +181,7 @@ if update_rssfeeds and config.has_section('rssfeeds'):
         feedfile = '%s.xml' % feed
         rss.write_xml( open( os.path.join(rssdir, feedfile), 'w') ) 
 
-for pkg in packagelist.keys():
+for pkg in list(packagelist.keys()):
     package = packagelist[pkg]
 #    print package.munki_repo.name
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 #
 # This software is Copyright (c) 2015 University of Oxford
 # 
@@ -17,6 +18,7 @@
 # Represent an on-disk Munki Repository
 #
 
+from builtins import object
 import os
 import plistlib
 import subprocess
@@ -25,7 +27,22 @@ import sys
 
 from . import Package, PackageList
 
-class MunkiRepository:
+def loadPlist(plist):
+    try:
+        p = plistlib.readPlist(plist)
+    except AttributeError:
+        with open(plist, "rb") as f:
+            p = plistlib.load(f)
+    return p
+
+def dumpPlist(plist, f):
+    try:
+        plistlib.writePlist(plist, f)
+    except AttributeError:
+        with open(f, "wb") as w:
+            plistlib.dump(plist, w)
+
+class MunkiRepository(object):
   
     def __init__(self, repo_config, makecatalogs='/usr/local/munki/bin/makecatalogs'):
 
@@ -51,16 +68,16 @@ class MunkiRepository:
             for file in files:
                 # Ingore invisible files
                 if file.startswith('.'):
-                  print 'Ignoring hidden file %s' % (file)
+                  print('Ignoring hidden file %s' % (file))
                   continue
                 # It is conceivable there are broken / non plist files
                 # so we try to parse the files, just in case
                 pkgsinfo = os.path.join(root, file)
                 try: 
-                    plist = plistlib.readPlist(pkgsinfo)
+                    plist = loadPlist(pkgsinfo)
                 except Exception as e:
-                   print 'Ignoring invalid pkgsinfo file %s' % (pkgsinfo)
-                   print '(Error: %s)' % (e)
+                   print('Ignoring invalid pkgsinfo file %s' % (pkgsinfo))
+                   print('(Error: %s)' % (e))
                    continue
 
                 package = Package( plist['name'], plist['version'],
@@ -88,28 +105,31 @@ class MunkiRepository:
         makecat = subprocess.Popen([self.munki_makecatalogs, self.munki_path],
                                    stdout=subprocess.PIPE)
         for line in makecat.stdout:
-	    if line != "":
+            if line != "":
             	print(line.rstrip().decode('utf-8')) # yield line
 
         return
 
     def update_pkgsinfo_catalog(self, pkgsinfo, catalog):
         
-        plist = plistlib.readPlist(pkgsinfo)
+        plist = loadPlist(pkgsinfo)
         plist['catalogs'] = [catalog]
-        plistlib.writePlist(plist, pkgsinfo)
+        dumpPlist(plist, pkgsinfo)
   
         self.update_munki_required(True)
         
         return
 
     def read_pkgsinfo(self, pkgsinfo):
-        return plistlib.readPlist(pkgsinfo)
+        
+        with open(pkgsinfo, "rb") as f:
+            plist = plistlib.load(f)
+            return plist
 
     def get_icon(self, pkgsinfo):
 
        pkgsinfo = self.read_pkgsinfo(pkgsinfo)
-       if pkgsinfo.has_key('icon_name'):
+       if 'icon_name' in pkgsinfo:
            icon_name = os.path.join('icons', pkgsinfo['icon_name'])
        else:
            icon_name = os.path.join('icons', pkgsinfo['name'] + '.png')

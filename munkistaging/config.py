@@ -1,3 +1,4 @@
+from __future__ import print_function
 #
 # This software is Copyright (c) 2015 University of Oxford
 # 
@@ -14,9 +15,12 @@
 # permissions and limitations under the License.
 #
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import re
 
-from ConfigParser import RawConfigParser, _default_dict
+from configparser import RawConfigParser, _default_dict
 
 from . import default_settings
 
@@ -42,7 +46,7 @@ def _list_cmp(a,b):
                      # and sort on [1], but it is not necessary
        return 0 
 
-class MunkiSchedule:
+class MunkiSchedule(object):
 
     # We assume that schedule_list is the result of
     # RawConfigParser.items(section) i.e. a list of key,value tuples
@@ -79,11 +83,11 @@ class MunkiSchedule:
             now = datetime.now()
         dow = now.weekday()
 
-        if self.periods.has_key(dow):
+        if dow in self.periods:
             now_int = now.hour * 3600 + now.minute * 60 + now.second
             for period in self.periods[dow]:
                 if debug:
-                   print '%s %s %s %s' % (period[0], now_int, period[1], now)
+                   print('%s %s %s %s' % (period[0], now_int, period[1], now))
                 if period[0] <= now_int and now_int <= period[1]:
                     return True
                 if now_int < period[0]: # stop working when we can
@@ -126,13 +130,13 @@ class MunkiStagingConfig(RawConfigParser):
         if self.read_config_files >= 1 and len(configcatalogs) > 0 :
             return MunkiStagingConfigCatalogs(self)
    
-        print "No configuration file ... using defaults"
+        print("No configuration file ... using defaults")
         # Find the first repo: if we have got this far, we assume that
         # there is only 1 repository ...
         munki_repositories = self.configured_munki_repositories()
         # munki_repositories can be an iterator or a list
         try:
-            munki_repo = munki_repositories.next()
+            munki_repo = next(munki_repositories)
         except AttributeError:
             munki_repo = munki_repositories[0]
        
@@ -279,8 +283,8 @@ class MunkiStagingConfig(RawConfigParser):
 
     def autostage_schedule(self, catalog=None):
         if have_dateutil == 0:
-            print 'python module dateutil is not installed'
-            print 'it is not possible to control scheduling'
+            print('python module dateutil is not installed')
+            print('it is not possible to control scheduling')
             return None
 
         if catalog is None:
@@ -292,22 +296,22 @@ class MunkiStagingConfig(RawConfigParser):
         return None
 
     def print_expected_trello(self):
-        print
-        print 'The current configuration expects a Trello board with the'
-        print 'following lists: '
-        print
+        print()
+        print('The current configuration expects a Trello board with the')
+        print('following lists: ')
+        print()
         for munki_cat in self.munki_catalogs():
             catname = munki_cat['catalog']
 
             list    = munki_cat['list']
             to_list = munki_cat['to_list']
       
-            print '\tFor Munki catalog %s' % catname
-            print '\t\tTo list     : %s' % to_list
-            print '\t\tPackage list: %s' % list
+            print('\tFor Munki catalog %s' % catname)
+            print('\t\tTo list     : %s' % to_list)
+            print('\t\tPackage list: %s' % list)
            
 
-class MunkiStagingConfigCatalogs:
+class MunkiStagingConfigCatalogs(object):
 
     catalog_re = re.compile('munki_catalog_(\w+)')
 
@@ -319,7 +323,7 @@ class MunkiStagingConfigCatalogs:
     def __iter__(self):
         return self
    
-    def next(self):
+    def __next__(self):
         while len(self.sections) > 0:
             section = self.sections.pop()
             rv = self.catalog_re.match(section)
@@ -345,7 +349,7 @@ class MunkiStagingConfigCatalogs:
         return self.len
    
 # Um ... this is basically the same as the above; do we need it ?
-class MunkiStagingRepositories:
+class MunkiStagingRepositories(object):
 
     mrepo_re = re.compile('munki_repo_(\w+)')
 
@@ -356,7 +360,7 @@ class MunkiStagingRepositories:
     def __iter__(self):
         return self
    
-    def next(self):
+    def __next__(self):
         while len(self.sections) > 0:
             section = self.sections.pop()
             rv = self.mrepo_re.match(section)

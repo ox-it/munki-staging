@@ -2,6 +2,7 @@
 # Tests
 #
 
+from builtins import range
 import unittest
 import os
 
@@ -11,7 +12,7 @@ from munkistaging.config import MunkiStagingConfig
 from dateutil import parser 
 
 FULL_TESTS=0
-if os.environ.has_key('FULL_TESTS'):
+if 'FULL_TESTS' in os.environ:
     FULL_TESTS=1
 
 class ScheduleTests(unittest.TestCase):
