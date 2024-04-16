@@ -1,4 +1,14 @@
+#Munki-Staging update - 16-04-2024 
+
+Please note we are no longer developing or maintaining this repo. Please consider alternatives to this script should you wish to utilise the munki staging process.
+
+Thanks,
+
+Orchard Team
+
+
 # Introduction
+
 
 This is a script that utilises a Trello board to manage the promotion of
 Munki items through development to production and then, if desired to
