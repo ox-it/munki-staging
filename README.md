@@ -1,4 +1,4 @@
-#Munki-Staging update - 16-04-2024 
+# Munki-Staging update - 16-04-2024 
 
 Please note we are no longer developing or maintaining this repo. Please consider alternatives to this script should you wish to utilise the munki staging process.
 
